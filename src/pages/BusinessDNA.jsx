@@ -37,7 +37,7 @@ Return exactly this shape:
   "primaryColor": hex color string that best represents the brand (e.g. "#3b82f6")
 }`
 
-  const res = await fetch('/api/deepseek/v1/chat/completions', {
+  const res = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
     body: JSON.stringify({
