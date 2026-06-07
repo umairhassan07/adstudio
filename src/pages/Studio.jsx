@@ -893,15 +893,20 @@ export default function Studio() {
               </div>
             )}
 
-            {/* Skeleton shimmer while generating */}
+            {/* Full-area loading overlay — visible immediately on generate click */}
             {genLoading && (
-              <div className={styles.canvasOuter}>
-                <div className={styles.canvasWrap} style={{ width: displayRef.current.w, height: displayRef.current.h }}>
-                  <div className={styles.skeleton} />
-                </div>
-                <div className={styles.genLabel}>
-                  <div className={styles.genDot} /><div className={styles.genDot} /><div className={styles.genDot} />
-                  <span>Generating…</span>
+              <div className={styles.genOverlay}>
+                <div className={styles.genOverlayShimmer} />
+                <div className={styles.genOverlayContent}>
+                  <div className={styles.genSpinner}>
+                    <div className={styles.genSpinnerRing} />
+                    <Sparkles size={18} className={styles.genSpinnerIcon} />
+                  </div>
+                  <p className={styles.genOverlayLabel}>Generating your ad…</p>
+                  <p className={styles.genOverlayHint}>Flux AI is crafting your image</p>
+                  <div className={styles.genDotsRow}>
+                    <div className={styles.genDot} /><div className={styles.genDot} /><div className={styles.genDot} />
+                  </div>
                 </div>
               </div>
             )}
@@ -909,7 +914,7 @@ export default function Studio() {
             {/* Canvas — no frame, image floats on dotted bg */}
             <div
               ref={canvasContainerRef}
-              style={{ opacity: genLoading ? 0 : 1, transition: 'opacity .3s', display: 'block', pointerEvents: 'auto', position: 'relative' }}
+              style={{ opacity: genLoading ? 0 : 1, transition: 'opacity .5s', display: 'block', pointerEvents: 'auto', position: 'relative' }}
             />
 
             {/* Floating toolbar — above selected image */}
