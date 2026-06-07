@@ -242,6 +242,45 @@
 .generateBtn:hover:not(:disabled) { background: var(--orange-600); }
 .generateBtn:disabled { opacity: .6; cursor: not-allowed; }
 
+/* ── Generated ads history strip ── */
+.genHistory {
+  padding: 10px 14px 6px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.genHistoryLabel {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .8px;
+  color: var(--gray-400); margin-bottom: 8px;
+}
+.genHistoryRow {
+  display: flex; gap: 8px; overflow-x: auto;
+  padding-bottom: 4px;
+}
+.genHistoryRow::-webkit-scrollbar { height: 3px; }
+.genHistoryRow::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 99px; }
+
+.genHistoryThumb {
+  flex-shrink: 0;
+  width: 52px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border-radius: 6px; overflow: visible;
+  border: 2px solid var(--border);
+  background: var(--gray-50);
+  cursor: pointer; transition: border-color .12s;
+  padding: 0 0 4px;
+}
+.genHistoryThumb:hover { border-color: var(--orange-400); }
+.genHistoryThumb img {
+  width: 100%; aspect-ratio: 1;
+  object-fit: cover; border-radius: 4px 4px 0 0;
+}
+.genHistoryFormat {
+  font-size: 9px; font-weight: 600;
+  color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: .4px; line-height: 1;
+}
+
 /* ── Chat input ── */
 .chatInput {
   padding: 10px 14px 12px;

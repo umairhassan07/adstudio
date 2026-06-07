@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import {
   Sparkles, Send, Upload, Download, RefreshCw,
-  Trash2, ImageIcon, Monitor, X,
+  Trash2, ImageIcon, Monitor, Smartphone, X,
   ZoomIn, ZoomOut, Maximize2, Wand2, PanelRight, PanelRightClose,
 } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
@@ -185,7 +185,8 @@ export default function Studio() {
   const [format, setFormat]         = useState(FORMATS[0])
   const [chatWidth, setChatWidth]   = useState(null)
   const [hasContent, setHasContent] = useState(false)
-  const [canvasOpen, setCanvasOpen] = useState(false)  // canvas panel hidden by default
+  const [canvasOpen, setCanvasOpen] = useState(false)
+  const [generatedAds, setGeneratedAds] = useState([])  // history of generated image URLs
 
   const canvasContainerRef = useRef(null)
   const canvasAreaRef       = useRef(null)  // measures available space
@@ -327,6 +328,7 @@ export default function Studio() {
       canvas.setActiveObject(img)
       canvas.renderAll()
       setHasContent(true)
+      setGeneratedAds(prev => [{ url, format: format.label, id: Date.now() }, ...prev])
 
       addAd({
         title: `AI Ad — ${format.label}`,
@@ -565,6 +567,26 @@ export default function Studio() {
           )}
 
           {/* Input */}
+          {/* Generated ads history */}
+          {generatedAds.length > 0 && (
+            <div className={styles.genHistory}>
+              <p className={styles.genHistoryLabel}>Generated · click to view</p>
+              <div className={styles.genHistoryRow}>
+                {generatedAds.map(item => (
+                  <button
+                    key={item.id}
+                    className={styles.genHistoryThumb}
+                    onClick={() => { setCanvasOpen(true); placeImage(item.url) }}
+                    title={`${item.format} — click to load`}
+                  >
+                    <img src={item.url} alt="generated ad" />
+                    <span className={styles.genHistoryFormat}>{item.format}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <form className={styles.chatInput} onSubmit={sendMessage}>
             <textarea
               className={styles.chatTextarea}
