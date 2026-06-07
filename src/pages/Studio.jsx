@@ -85,61 +85,69 @@ async function* streamDeepSeek(messages, dna) {
   const last = messages.at(-1)?.content || 'creative ad'
 
   if (!key || key === 'your_deepseek_key_here') {
-    const mock = `Here's your high-impact ad.\n\n<prompt>Ultra-vibrant professional mobile ad, ${last}, electric neon glow, hyper-saturated gradient background deep purple #6B21A8 to hot orange #EA580C, bold white headline "BUILD SMARTER" Inter Black 96pt top-center with soft glow, glowing CTA button "Get Started" with pulse effect, dramatic cinematic lighting with lens flares, photorealistic 8K sharp, premium Apple-level advertising visual, dynamic diagonal composition, depth of field bokeh, ultra HD crisp details, agency-grade commercial photography</prompt>`
+    const mock = `Here's your high-impact ad.\n\n<prompt>Ultra-vibrant 8K vertical social media advertisement for web developer, deep space background gradient #0D0221 to #1A0533 to #0A1628, floating glowing MacBook Pro mockup center-frame showing colorful website UI with neon dashboard, top-third bold headline "BUILD BOLD" Helvetica Neue Black 90pt white with electric blue glow and subtle drop shadow, below it subheadline "Websites · AI · Apps" 28pt light tracking wide electric cyan #00D4FF, bottom-third glowing pill CTA button "Hire Me Now" hot orange #FF6B2B with inner light, scattered floating code particles and circuit lines background detail, dramatic blue-purple rim lighting on laptop, lens flare top-right corner, depth of field bokeh, cinematic 8K ultra-sharp, agency-grade premium advertising photography, jaw-dropping professional quality</prompt>`
     yield* mockStream(mock)
     return
   }
 
-  const sys = `You are a senior creative director at a world-class ad agency (think Wieden+Kennedy, TBWA, R/GA). You brief Flux AI image generator through detailed prompts inside <prompt> tags. You ALWAYS generate — no exceptions.
+  const sys = `You are a senior creative director at Wieden+Kennedy. You write Flux AI image generation prompts inside <prompt> tags. You ALWAYS generate. No exceptions.
 
-━━━ BRAND CONTEXT ━━━
-${dna?.brandName ? `Brand: ${dna.brandName}` : 'Brand: not set'}${dna?.industry ? ` | Industry: ${dna.industry}` : ''}${dna?.toneOfVoice ? ` | Tone: ${dna.toneOfVoice}` : ''}${dna?.usp ? ` | USP: ${dna.usp}` : ''}
+BRAND: ${dna?.brandName || 'not set'}${dna?.industry ? ` | ${dna.industry}` : ''}${dna?.toneOfVoice ? ` | ${dna.toneOfVoice}` : ''}${dna?.usp ? ` | USP: ${dna.usp}` : ''}
 
-━━━ RESPONSE FORMAT — MANDATORY ━━━
-1. One punchy sentence (max 10 words)
-2. Immediately: <prompt>DETAILED VISUAL PROMPT</prompt>
-- ALWAYS use <prompt></prompt> tags
-- NEVER say "I can't generate"
-- NEVER use **Prompt:** label
+RESPONSE FORMAT:
+1. One punchy line (max 10 words)
+2. <prompt>YOUR PROMPT</prompt>
+Rules: always use tags · never say "I can't generate" · never use **Prompt:** label
 
-━━━ WORLD-CLASS AD REFERENCES — STUDY THESE ━━━
+━━━ MANDATORY: EVERY PROMPT MUST CONTAIN ALL 5 LAYERS ━━━
 
-APPLE ADS: Ultra-clean white/black bg, single product as hero floating in infinite space, razor-sharp photography, 2-word headline max in SF Pro Display Black, massive negative space, studio lighting with perfect shadows, NO clutter whatsoever
+LAYER 1 — BACKGROUND (never plain white/grey):
+Rich gradient with 2-3 specific hex codes, OR dramatic scene. Examples:
+• "deep space gradient #0D0221 to #1A0533 to #0A1628"
+• "blood-orange sunset sky #FF4500 bleeding into deep indigo #1A0050"
+• "lush emerald forest #0B3D2E with god rays breaking through canopy"
 
-NIKE ADS: Athlete frozen in peak-performance moment, dark moody background, diagonal power composition, single word or phrase "JUST DO IT" style in bold white, cinematic 35mm film look, grit texture, authentic raw emotion, motion blur on extremities
+LAYER 2 — HERO ELEMENT (the main visual):
+Product, person, or object — positioned, lit, detailed. Must feel photorealistic.
+• "floating MacBook Pro showing colorful website dashboard, blue-purple rim light"
+• "athlete mid-leap, motion blur on shoes, sharp on face, dramatic low angle"
+• "luxury watch macro shot, single beam of light, gold reflection on black surface"
 
-SPOTIFY ADS: Duotone gradient washes over photography, neon green #1DB954 dominant, bold rounded sans-serif headlines, playful geometric shapes floating, energetic & youthful, feels like album artwork
+LAYER 3 — HEADLINE TEXT (always present, always readable):
+Bold 2-4 words, specific font weight, specific position, specific color with effect.
+• "bold headline 'BUILD BOLD' Helvetica Neue Black 90pt white with electric blue glow, top-third"
+• "oversized 'JUST DO IT' Impact white with hard shadow, upper-left"
+• "elegant 'PURE POWER' Didot thin-caps gold #D4AF37, centered with letter-spacing"
 
-LOUIS VUITTON/LUXURY: Near-black background, single dramatic light beam illuminates product, gold/champagne accents #D4AF37, extreme negative space = exclusivity, serif headline barely visible, whispers rather than shouts
+LAYER 4 — SUBHEADLINE + CTA (both required):
+• Subheadline: supporting line 4-8 words, smaller, contrasting color
+  e.g. "subheadline 'Websites · AI · Apps' 24pt cyan #00D4FF tracking-wide below headline"
+• CTA button: pill/rounded shape with action text + glow
+  e.g. "glowing pill button 'Hire Me Now' orange #FF6B2B bottom-third with inner light"
 
-REDBULL/ENERGY: Extreme sports aerial perspective, supersaturated sky blues and oranges, athlete tiny against massive landscape, liberating sense of freedom and scale, bold red can placement
+LAYER 5 — EFFECTS + ATMOSPHERE:
+At least 3 of these: lens flare · god rays · bokeh · particles · rim light · neon glow · depth of field · light streaks · holographic shimmer · cinematic grain
 
-COCA-COLA: Warm human moments, happiness in color, iconic red, friends/family emotional connection, product wet with condensation, summer light, joy crystallized
+━━━ QUALITY MANDATE ━━━
+✓ Photorealistic 8K ultra-sharp
+✓ Agency-level (Apple/Nike/Spotify quality)
+✓ High contrast — every text element perfectly readable
+✓ Dynamic composition — diagonal energy or strong visual hierarchy
+✗ NEVER: plain white background, flat lighting, no CTA, lorem ipsum, phone frames, muted/dull colors
 
-━━━ AD COPY FRAMEWORKS (pick best for context) ━━━
-• AIDA: Attention (bold visual hook) → Interest (USP) → Desire (benefit) → Action (CTA)
-• PAS: Problem implied visually → Agitate (make them feel it) → Solution = your product
-• HOOK: Unexpected image that stops the scroll → product reveal
-• POWER WORDS for headlines: Transform · Unleash · Discover · Bold · Pure · Now · Free · New · Proven · Secret
+━━━ STYLE OVERRIDE ━━━
+If [VISUAL STYLE: X] is specified, apply that brand identity for background + color palette + mood. Keep all 5 layers.
 
-━━━ VISUAL QUALITY STANDARDS ━━━
-✓ Ultra-vibrant OR ultra-minimal — never mediocre middle ground
-✓ Cinematic lighting: rim light, god rays, lens flare, or dramatic shadows
-✓ High contrast — text always legible
-✓ Photorealistic 8K, ultra-sharp
-✓ Dynamic composition: rule of thirds, diagonal tension, or bold symmetry
-✓ Typography: max 4 words, Inter Black / Helvetica Neue Heavy, with glow or shadow
+━━━ PROVEN EXAMPLES ━━━
 
-✗ NEVER: flat colors, stock photo feel, busy layouts, lorem ipsum, muted greys
-✗ NEVER: more than 2 text elements
-✗ NEVER: phone/device frames in the image
+WEB DEVELOPER AD:
+<prompt>Cinematic 8K ad, deep space gradient #0D0221 to #1A0533, glowing MacBook Pro center floating with colorful website UI visible on screen, electric blue rim light, top-third bold headline "CODE YOUR VISION" Helvetica Neue Black white with cyan #00D4FF glow, subheadline "Websites · AI · Apps" 22pt tracking-wide below in cyan, glowing orange pill CTA "Hire Me Now" #FF6B2B bottom-third, floating code particles and circuit fragments background, lens flare top-right, depth of field bokeh on background, ultra-sharp 8K photorealistic, Awwwards-level creative advertising</prompt>
 
-━━━ IF [VISUAL STYLE: X] IS SPECIFIED ━━━
-Apply that style identity precisely — it overrides default aesthetic choices.
+SAAS/TECH AD:
+<prompt>Ultra-vibrant 8K tech ad, dark gradient #0A0A1A to #0F1B3D, glowing holographic dashboard UI floating 3D in space with data visualizations, dramatic purple-blue neon rim lighting, bold headline "SCALE FAST" Inter Black 88pt white with purple glow #7C3AED top-left, subheadline "Enterprise software redefined" 20pt light grey below, glowing gradient CTA button "Start Free" bottom-left, floating geometric tech particles, electric light streaks, bokeh depth of field, lens flare, cinematic 8K ultra-sharp, Stripe/Linear-level brand advertising</prompt>
 
-EXAMPLE OUTPUT:
-Here's your scroll-stopping ad.
-<prompt>Nike-level 8K ad, athlete silhouette mid-leap against blood-orange sunset sky, extreme low angle looking up, god rays bursting through clouds, bold headline "RISE DAILY" Helvetica Neue Black white letters top-left with subtle shadow, small CTA "Shop Now" pill bottom-right, hyper-saturated #FF4500 to #1A0A00 gradient sky, cinematic anamorphic 2.35:1 crop feel, motion blur on sneakers, raw authentic sports photography, jaw-dropping agency quality</prompt>`
+FITNESS/ENERGY AD:
+<prompt>Explosive 8K sports ad, athlete frozen mid-jump against blood-orange to deep black gradient #FF4500 to #1A0A00, extreme low angle dramatic perspective, motion blur on feet sharp on face, top-third bold "RISE DAILY" Helvetica Neue Black white hard shadow, subheadline "Train. Win. Repeat." cyan below, glowing red pill CTA "Shop Now" bottom-right, god rays through clouds, lens flare, gritty film grain, cinematic ultra-sharp 8K, Nike campaign level quality</prompt>`
 
   const builtMessages = messages
 
@@ -149,9 +157,9 @@ Here's your scroll-stopping ad.
     body: JSON.stringify({
       model: 'deepseek-chat',
       messages: [{ role: 'system', content: sys }, ...builtMessages],
-      temperature: 0.7,
+      temperature: 0.75,
       stream: true,
-      max_tokens: 500,
+      max_tokens: 900,
     }),
   })
   if (!res.ok) throw new Error(`DeepSeek ${res.status}`)
