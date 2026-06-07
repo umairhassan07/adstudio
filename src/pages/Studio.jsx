@@ -649,18 +649,6 @@ export default function Studio() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Prompt ready */}
-          {lastPrompt && (
-            <div className={styles.promptReady}>
-              <div className={styles.promptReadyText}><Wand2 size={12} /><span>Prompt ready</span></div>
-              <button className={styles.generateBtn} onClick={() => generateImage()} disabled={genLoading}>
-                {genLoading
-                  ? <><RefreshCw size={13} className={styles.spin} /> Generating…</>
-                  : <><Sparkles size={13} /> Generate Ad</>}
-              </button>
-            </div>
-          )}
-
           {/* Generated ads history */}
           {generatedAds.length > 0 && (
             <div className={styles.genHistory}>
@@ -688,6 +676,19 @@ export default function Studio() {
           )}
 
           <div className={styles.chatInputWrap}>
+
+            {/* Prompt ready — inside chatInputWrap so width matches inputBox */}
+            {lastPrompt && (
+              <div className={styles.promptReady}>
+                <div className={styles.promptReadyText}><Wand2 size={12} /><span>Prompt ready</span></div>
+                <button className={styles.generateBtn} onClick={() => generateImage()} disabled={genLoading}>
+                  {genLoading
+                    ? <><RefreshCw size={13} className={styles.spin} /> Generating…</>
+                    : <><Sparkles size={13} /> Generate Ad</>}
+                </button>
+              </div>
+            )}
+
             <div className={styles.inputBox}>
 
               {/* Row 1 — Format pills */}

@@ -189,7 +189,6 @@
 
 /* Center chat content with max-width */
 .chatMessages,
-.promptReady,
 .genHistory,
 .chatInputWrap {
   max-width: 700px;
@@ -325,9 +324,9 @@
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-/* ── Prompt ready ── */
+/* ── Prompt ready — lives inside chatInputWrap, matches inputBox width ── */
 .promptReady {
-  margin: 0 14px 10px;
+  margin-bottom: 8px;
   padding: 10px 12px;
   background: linear-gradient(135deg, var(--orange-50), #fff8f3);
   border: 1.5px solid var(--orange-200);
