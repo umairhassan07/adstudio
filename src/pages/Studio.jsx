@@ -16,6 +16,42 @@ const FORMATS = [
   { id: 'banner',    label: 'Banner',    ratio: '1.91:1', w: 1200, h: 628,  aspect: 1.91,  platform: 'Facebook · Google Display',      mobile: false },
 ]
 
+/* ── Style presets — world's best ad aesthetics ── */
+const AD_STYLES = [
+  {
+    id: 'apple', label: 'Apple', icon: '⬜',
+    desc: 'Apple-style ultra-minimalist: pure white background, single product floating with perfect studio lighting, razor-sharp edges, massive negative space, one 2-word headline in SF Pro Display Black, premium product photography, absolutely no clutter',
+  },
+  {
+    id: 'nike', label: 'Nike', icon: '⚡',
+    desc: 'Nike-style raw power: athlete in explosive motion against dark bg, diagonal dynamic composition, one motivational 2-word headline bold white with drop shadow, cinematic high-contrast sports photography, gritty texture overlay, intense dramatic lighting',
+  },
+  {
+    id: 'spotify', label: 'Spotify', icon: '🎵',
+    desc: 'Spotify-style vibrant duotone: electric green #1DB954 and deep black, bold rounded typography, floating music-inspired geometric shapes, energetic youthful gradient, album-art composition, neon glow accents',
+  },
+  {
+    id: 'luxury', label: 'Luxury', icon: '💎',
+    desc: 'Ultra-luxury: near-black background #0A0A0A, gold #D4AF37 and champagne accents, single product lit with one dramatic shaft of light, extreme negative space, elegant serif headline whisper-thin, Chanel/Rolex advertising aesthetic',
+  },
+  {
+    id: 'cyber', label: 'Cyber', icon: '🔮',
+    desc: 'Cyberpunk futuristic: dark neon cityscape, electric blue #00D4FF and hot magenta #FF006E neon glows, holographic glass surfaces, tech grid-lines, matrix data streams, Blade Runner atmosphere, sci-fi product placement',
+  },
+  {
+    id: 'bold', label: 'Bold', icon: '🔥',
+    desc: 'Maximum impact bold: oversized typography fills 70% of frame, extreme red and black contrast, distressed grunge texture, punk streetwear energy, aggressive in-your-face layout, one powerful word dominates, Kanye/Supreme aesthetic',
+  },
+  {
+    id: 'fashion', label: 'Fashion', icon: '✨',
+    desc: 'High fashion editorial: unexpected color blocking, asymmetric avant-garde layout, Vogue/Harper\'s Bazaar aesthetic, model in artistic pose, bold color contrast, sophisticated minimalist typography, gallery-worthy composition',
+  },
+  {
+    id: 'natural', label: 'Natural', icon: '🌿',
+    desc: 'Organic lifestyle: warm golden-hour sunlight, natural textures linen and wood, earthy palette warm sand #D4A96A and sage green #7B9E87, artisanal flat-lay, soft bokeh, wholesome authentic feel, Patagonia/Aesop aesthetic',
+  },
+]
+
 /* Compute canvas display size to fill ~80% of container */
 function calcDisplay(aspect, containerW, containerH) {
   const maxH = Math.floor(containerH * 0.82)
@@ -48,41 +84,56 @@ async function* streamDeepSeek(messages, dna) {
     return
   }
 
-  const sys = `You are an elite AI ad creative director at AdStudio. Your prompts go DIRECTLY to Flux AI for image generation — you DO create images via your prompts.
+  const sys = `You are a senior creative director at a world-class ad agency (think Wieden+Kennedy, TBWA, R/GA). You brief Flux AI image generator through detailed prompts inside <prompt> tags. You ALWAYS generate — no exceptions.
 
-BRAND CONTEXT:
+━━━ BRAND CONTEXT ━━━
 ${dna?.brandName ? `Brand: ${dna.brandName}` : 'Brand: not set'}${dna?.industry ? ` | Industry: ${dna.industry}` : ''}${dna?.toneOfVoice ? ` | Tone: ${dna.toneOfVoice}` : ''}${dna?.usp ? ` | USP: ${dna.usp}` : ''}
 
-YOUR RESPONSE FORMAT — MANDATORY:
-1. One short sentence (max 12 words)
-2. Immediately: <prompt>YOUR PROMPT</prompt>
-
-CRITICAL RULES:
-- ALWAYS use <prompt></prompt> tags — no exceptions
-- NEVER say "I can't generate" — you CAN and MUST
+━━━ RESPONSE FORMAT — MANDATORY ━━━
+1. One punchy sentence (max 10 words)
+2. Immediately: <prompt>DETAILED VISUAL PROMPT</prompt>
+- ALWAYS use <prompt></prompt> tags
+- NEVER say "I can't generate"
 - NEVER use **Prompt:** label
 
-VISUAL QUALITY MANDATE — EVERY PROMPT MUST HAVE:
-- Ultra-vibrant, hyper-saturated colors — electric, neon, glowing
-- Dramatic cinematic lighting: rim light, god rays, lens flares, bokeh
-- High contrast between background and text
-- Photorealistic 8K ultra-sharp, no blur except intentional bokeh
-- Premium agency-grade (Apple / Nike / Adidas ad level)
-- Dynamic composition: diagonal lines, depth layers, visual tension
-- Bold gradient backgrounds (NOT flat, NOT dull, NOT muted)
+━━━ WORLD-CLASS AD REFERENCES — STUDY THESE ━━━
 
-TYPOGRAPHY RULES:
-- ONLY 2–4 words per text element
-- Ultra-bold font (Inter Black / Helvetica Neue Heavy)
-- Text must have glow, shadow or outline for visibility
-- Max 2 text elements total
+APPLE ADS: Ultra-clean white/black bg, single product as hero floating in infinite space, razor-sharp photography, 2-word headline max in SF Pro Display Black, massive negative space, studio lighting with perfect shadows, NO clutter whatsoever
 
-LAYOUT: hero visual + bold headline + CTA button
-ABSOLUTELY AVOID: dull colors, flat design, corporate stock photo feel, muted tones, grey/beige backgrounds, realistic office settings without drama
+NIKE ADS: Athlete frozen in peak-performance moment, dark moody background, diagonal power composition, single word or phrase "JUST DO IT" style in bold white, cinematic 35mm film look, grit texture, authentic raw emotion, motion blur on extremities
 
-EXAMPLE:
-Here's your high-impact ad.
-<prompt>Ultra-vibrant 8K mobile ad, dark futuristic cityscape at night with electric blue and neon orange light trails, massive bold headline "BUILD SMARTER" Inter Black white with orange glow top-center, glowing pill CTA "Get Started" bottom-center, hyper-saturated gradient #0F0C29 to #FF6B35, cinematic anamorphic lens flare, god rays through clouds, ultra-sharp depth of field, Apple-level premium advertising photography, jaw-dropping visual impact</prompt>`
+SPOTIFY ADS: Duotone gradient washes over photography, neon green #1DB954 dominant, bold rounded sans-serif headlines, playful geometric shapes floating, energetic & youthful, feels like album artwork
+
+LOUIS VUITTON/LUXURY: Near-black background, single dramatic light beam illuminates product, gold/champagne accents #D4AF37, extreme negative space = exclusivity, serif headline barely visible, whispers rather than shouts
+
+REDBULL/ENERGY: Extreme sports aerial perspective, supersaturated sky blues and oranges, athlete tiny against massive landscape, liberating sense of freedom and scale, bold red can placement
+
+COCA-COLA: Warm human moments, happiness in color, iconic red, friends/family emotional connection, product wet with condensation, summer light, joy crystallized
+
+━━━ AD COPY FRAMEWORKS (pick best for context) ━━━
+• AIDA: Attention (bold visual hook) → Interest (USP) → Desire (benefit) → Action (CTA)
+• PAS: Problem implied visually → Agitate (make them feel it) → Solution = your product
+• HOOK: Unexpected image that stops the scroll → product reveal
+• POWER WORDS for headlines: Transform · Unleash · Discover · Bold · Pure · Now · Free · New · Proven · Secret
+
+━━━ VISUAL QUALITY STANDARDS ━━━
+✓ Ultra-vibrant OR ultra-minimal — never mediocre middle ground
+✓ Cinematic lighting: rim light, god rays, lens flare, or dramatic shadows
+✓ High contrast — text always legible
+✓ Photorealistic 8K, ultra-sharp
+✓ Dynamic composition: rule of thirds, diagonal tension, or bold symmetry
+✓ Typography: max 4 words, Inter Black / Helvetica Neue Heavy, with glow or shadow
+
+✗ NEVER: flat colors, stock photo feel, busy layouts, lorem ipsum, muted greys
+✗ NEVER: more than 2 text elements
+✗ NEVER: phone/device frames in the image
+
+━━━ IF [VISUAL STYLE: X] IS SPECIFIED ━━━
+Apply that style identity precisely — it overrides default aesthetic choices.
+
+EXAMPLE OUTPUT:
+Here's your scroll-stopping ad.
+<prompt>Nike-level 8K ad, athlete silhouette mid-leap against blood-orange sunset sky, extreme low angle looking up, god rays bursting through clouds, bold headline "RISE DAILY" Helvetica Neue Black white letters top-left with subtle shadow, small CTA "Shop Now" pill bottom-right, hyper-saturated #FF4500 to #1A0A00 gradient sky, cinematic anamorphic 2.35:1 crop feel, motion blur on sneakers, raw authentic sports photography, jaw-dropping agency quality</prompt>`
 
   const builtMessages = messages
 
@@ -262,6 +313,7 @@ export default function Studio() {
 
   const [refImage, setRefImage]           = useState(null)
   const [showRefPicker, setShowRefPicker] = useState(false)
+  const [selectedStyle, setSelectedStyle] = useState(null)
 
   /* ── Drag resize ── */
   const dragging    = useRef(false)
@@ -441,8 +493,11 @@ export default function Studio() {
     const refNote = refImage
       ? `\n\n[Reference image attached: "${refImage.name}". Match its visual style, color palette, composition and mood closely in the generated ad.]`
       : ''
+    const styleNote = selectedStyle
+      ? `\n\n[VISUAL STYLE: ${selectedStyle.label} — ${selectedStyle.desc}]`
+      : ''
 
-    const userMessage = { role: 'user', content: text + refNote }
+    const userMessage = { role: 'user', content: text + refNote + styleNote }
     const next = [...messages, userMessage]
     // Show in UI — image attached to message bubble, cleared from input
     const sentImage = refImage ? { url: refImage.url, name: refImage.name } : null
@@ -656,7 +711,22 @@ export default function Studio() {
                 </button>
               </div>
 
-              {/* Row 2 — Reference image (shown when selected) */}
+              {/* Row 2 — Style presets */}
+              <div className={styles.styleRow}>
+                {AD_STYLES.map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className={`${styles.styleChip} ${selectedStyle?.id === s.id ? styles.styleChipActive : ''}`}
+                    onClick={() => setSelectedStyle(v => v?.id === s.id ? null : s)}
+                    title={s.desc}
+                  >
+                    <span>{s.icon}</span>{s.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Row 3 — Reference image (shown when selected) */}
               {refImage && (
                 <div className={styles.inputRefRow}>
                   <img src={refImage.url} alt="reference" className={styles.inputRefThumb} />

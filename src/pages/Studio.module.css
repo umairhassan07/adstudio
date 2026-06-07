@@ -57,6 +57,32 @@
 .inputCanvasBtnOn { background: var(--gray-900); color: white; border-color: var(--gray-900); }
 .inputCanvasBtnOn:hover { background: var(--gray-800); }
 
+/* Style presets row */
+.styleRow {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.styleRow::-webkit-scrollbar { display: none; }
+.styleChip {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 99px;
+  font-size: 11px; font-weight: 500;
+  color: var(--text-muted);
+  border: 1.5px solid var(--border);
+  background: white; white-space: nowrap;
+  transition: all .12s; cursor: pointer; flex-shrink: 0;
+}
+.styleChip:hover { border-color: var(--orange-300); color: var(--orange-600); background: var(--orange-50); }
+.styleChipActive {
+  background: var(--gray-900); color: white;
+  border-color: var(--gray-900);
+}
+.styleChipActive:hover { background: var(--gray-800); color: white; border-color: var(--gray-800); }
+
 /* Reference image row */
 .inputRefRow {
   display: flex; align-items: center; gap: 8px;
