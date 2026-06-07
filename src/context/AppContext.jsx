@@ -126,7 +126,10 @@ export function AppProvider({ children }) {
         data,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'session_id' })
-      if (error) console.error('saveDNA error:', error)
+      if (error) {
+        console.error('saveDNA error:', error)
+        throw new Error(error.message)
+      }
     }
   }
 

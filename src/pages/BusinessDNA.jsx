@@ -77,21 +77,36 @@ const fonts = ['Inter', 'Roboto', 'Playfair Display', 'Montserrat', 'Poppins', '
 
 export default function BusinessDNA() {
   const { dna, saveDNA, dnaComplete } = useApp()
-  const [form, setForm] = useState(dna)
-  const [saved, setSaved] = useState(false)
-  const [urlInput, setUrlInput] = useState('')
+  const [form, setForm]           = useState(dna)
+  const [saving, setSaving]       = useState(false)
+  const [saveStatus, setSaveStatus] = useState('') // 'saved' | 'error' | ''
+  const [urlInput, setUrlInput]   = useState('')
   const [extracting, setExtracting] = useState(false)
   const [extractError, setExtractError] = useState('')
 
   function set(key, val) {
     setForm(f => ({ ...f, [key]: val }))
+    setSaveStatus('') // clear status when form changes
+  }
+
+  async function doSave(data) {
+    setSaving(true)
+    setSaveStatus('')
+    try {
+      await saveDNA(data)
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus(''), 3000)
+    } catch (err) {
+      console.error('Save failed:', err)
+      setSaveStatus('error')
+    } finally {
+      setSaving(false)
+    }
   }
 
   function handleSubmit(e) {
     e.preventDefault()
-    saveDNA(form)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    doSave(form)
   }
 
   async function handleExtract() {
@@ -101,18 +116,21 @@ export default function BusinessDNA() {
     setExtractError('')
     try {
       const brand = await extractBrandFromUrl(url.startsWith('http') ? url : `https://${url}`)
-      setForm(f => ({
-        ...f,
-        brandName:      brand.brandName      || f.brandName,
-        tagline:        brand.tagline        || f.tagline,
-        industry:       brand.industry       || f.industry,
-        toneOfVoice:    brand.toneOfVoice    || f.toneOfVoice,
-        targetAudience: brand.targetAudience || f.targetAudience,
-        usp:            brand.usp            || f.usp,
-        keywords:       brand.keywords       || f.keywords,
-        primaryColor:   brand.primaryColor   || f.primaryColor,
+      const merged = {
+        ...form,
+        brandName:      brand.brandName      || form.brandName,
+        tagline:        brand.tagline        || form.tagline,
+        industry:       brand.industry       || form.industry,
+        toneOfVoice:    brand.toneOfVoice    || form.toneOfVoice,
+        targetAudience: brand.targetAudience || form.targetAudience,
+        usp:            brand.usp            || form.usp,
+        keywords:       brand.keywords       || form.keywords,
+        primaryColor:   brand.primaryColor   || form.primaryColor,
         website:        url,
-      }))
+      }
+      setForm(merged)
+      // Auto-save to Supabase immediately after extraction
+      await doSave(merged)
     } catch (err) {
       setExtractError(`Could not extract brand info: ${err.message}`)
     } finally {
@@ -332,8 +350,11 @@ export default function BusinessDNA() {
           </div>
         </div>
 
-        <button type="submit" className="btn btn-primary btn-lg" style={{ alignSelf: 'flex-start' }}>
-          {saved ? <><CheckCircle2 size={17} /> Saved!</> : 'Save Business DNA'}
+        <button type="submit" className="btn btn-primary btn-lg" style={{ alignSelf: 'flex-start' }} disabled={saving}>
+          {saving      && <><Loader2 size={17} className={styles.spin} /> Saving…</>}
+          {!saving && saveStatus === 'saved'  && <><CheckCircle2 size={17} /> Saved!</>}
+          {!saving && saveStatus === 'error'  && '⚠ Save failed — check console'}
+          {!saving && !saveStatus             && 'Save Business DNA'}
         </button>
       </form>
 
