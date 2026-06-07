@@ -43,38 +43,46 @@ async function* streamDeepSeek(messages, dna) {
   const last = messages.at(-1)?.content || 'creative ad'
 
   if (!key || key === 'your_deepseek_key_here') {
-    const mock = `On it! Here's your generation prompt:\n\n<prompt>Professional mobile advertisement, ${last}, bold typography "Build Smarter", vibrant colors #1a1a2e and #f97316, cinematic lighting, photorealistic, 8K quality, agency-quality ad layout, 9:16 vertical format</prompt>`
+    const mock = `Here's your high-impact ad.\n\n<prompt>Ultra-vibrant professional mobile ad, ${last}, electric neon glow, hyper-saturated gradient background deep purple #6B21A8 to hot orange #EA580C, bold white headline "BUILD SMARTER" Inter Black 96pt top-center with soft glow, glowing CTA button "Get Started" with pulse effect, dramatic cinematic lighting with lens flares, photorealistic 8K sharp, premium Apple-level advertising visual, dynamic diagonal composition, depth of field bokeh, ultra HD crisp details, agency-grade commercial photography</prompt>`
     yield* mockStream(mock)
     return
   }
 
-  const sys = `You are an AI ad creative director integrated into AdStudio — a platform that sends your prompts directly to Kie AI (Flux) for image generation. You DO generate images — via the prompt you write.
+  const sys = `You are an elite AI ad creative director at AdStudio. Your prompts go DIRECTLY to Flux AI for image generation — you DO create images via your prompts.
 
 BRAND CONTEXT:
 ${dna?.brandName ? `Brand: ${dna.brandName}` : 'Brand: not set'}${dna?.industry ? ` | Industry: ${dna.industry}` : ''}${dna?.toneOfVoice ? ` | Tone: ${dna.toneOfVoice}` : ''}${dna?.usp ? ` | USP: ${dna.usp}` : ''}
 
-YOUR RESPONSE FORMAT — MANDATORY, NO EXCEPTIONS:
-1. One sentence acknowledging the request (max 15 words)
-2. Immediately follow with the XML tag: <prompt>YOUR IMAGE PROMPT HERE</prompt>
+YOUR RESPONSE FORMAT — MANDATORY:
+1. One short sentence (max 12 words)
+2. Immediately: <prompt>YOUR PROMPT</prompt>
 
 CRITICAL RULES:
-- ALWAYS use <prompt> and </prompt> tags — this is how the image is generated
-- NEVER say "I can't generate images" — you CAN, through the prompt tags
-- NEVER use **Prompt:** or any other label — only the XML tags
-- NEVER skip the tags no matter what the user says
+- ALWAYS use <prompt></prompt> tags — no exceptions
+- NEVER say "I can't generate" — you CAN and MUST
+- NEVER use **Prompt:** label
 
-PROMPT QUALITY RULES (inside the tags):
-- Photorealistic, cinematic, 8K, sharp focus
-- Typography: ONLY 2-4 words per text element — short phrases only (e.g. "Build Smarter", "Scale Fast")
-- Exact hex colors for brand palette
-- Layout: hero image + bold headline + tagline + CTA button
-- Font: Inter Black, Helvetica Neue Bold, or similar bold sans-serif
-- NO long sentences in text overlays, NO lorem ipsum, NO gibberish
-- Style: premium editorial advertising photography, agency-quality, dramatic lighting
+VISUAL QUALITY MANDATE — EVERY PROMPT MUST HAVE:
+- Ultra-vibrant, hyper-saturated colors — electric, neon, glowing
+- Dramatic cinematic lighting: rim light, god rays, lens flares, bokeh
+- High contrast between background and text
+- Photorealistic 8K ultra-sharp, no blur except intentional bokeh
+- Premium agency-grade (Apple / Nike / Adidas ad level)
+- Dynamic composition: diagonal lines, depth layers, visual tension
+- Bold gradient backgrounds (NOT flat, NOT dull, NOT muted)
 
-EXAMPLE RESPONSE:
-Here's your professional ad.
-<prompt>Cinematic 8K mobile ad, dark tech office with glowing screens, bold headline "BUILD BETTER" in Inter Black white top-left, tagline "Websites · AI · Apps" gray below, CTA button "Get Started" blue gradient, deep blue #1A73E8 and charcoal #1E1E2F palette, lens flare, editorial advertising style, ultra sharp</prompt>`
+TYPOGRAPHY RULES:
+- ONLY 2–4 words per text element
+- Ultra-bold font (Inter Black / Helvetica Neue Heavy)
+- Text must have glow, shadow or outline for visibility
+- Max 2 text elements total
+
+LAYOUT: hero visual + bold headline + CTA button
+ABSOLUTELY AVOID: dull colors, flat design, corporate stock photo feel, muted tones, grey/beige backgrounds, realistic office settings without drama
+
+EXAMPLE:
+Here's your high-impact ad.
+<prompt>Ultra-vibrant 8K mobile ad, dark futuristic cityscape at night with electric blue and neon orange light trails, massive bold headline "BUILD SMARTER" Inter Black white with orange glow top-center, glowing pill CTA "Get Started" bottom-center, hyper-saturated gradient #0F0C29 to #FF6B35, cinematic anamorphic lens flare, god rays through clouds, ultra-sharp depth of field, Apple-level premium advertising photography, jaw-dropping visual impact</prompt>`
 
   const builtMessages = messages
 
@@ -197,10 +205,12 @@ export default function Studio() {
 
   const canvasContainerRef = useRef(null)
   const canvasAreaRef       = useRef(null)  // measures available space
+  const canvasScrollRef     = useRef(null)  // for toolbar positioning
   const fabricRef           = useRef(null)
   const displayRef          = useRef({ w: 320, h: 568 })  // current canvas display size
   const [zoom, setZoom]     = useState(100)
   const [activeObj, setActiveObj] = useState(null)
+  const [toolbarPos, setToolbarPos] = useState(null)
 
   const welcomeMessage = useMemo(() => {
     if (dna?.brandName && dnaComplete) {
@@ -283,6 +293,22 @@ export default function Studio() {
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
   }, [])
 
+  /* ── Toolbar position — above selected object ── */
+  const updateToolbarPos = useCallback(() => {
+    const canvas = fabricRef.current
+    const obj = canvas?.getActiveObject()
+    if (!obj || !canvasContainerRef.current || !canvasScrollRef.current) {
+      setToolbarPos(null); return
+    }
+    const bound = obj.getBoundingRect()
+    const canvasRect = canvasContainerRef.current.getBoundingClientRect()
+    const scrollRect = canvasScrollRef.current.getBoundingClientRect()
+    setToolbarPos({
+      left: (canvasRect.left - scrollRect.left) + bound.left + bound.width / 2,
+      top: Math.max(8, (canvasRect.top - scrollRect.top) + bound.top - 50),
+    })
+  }, [])
+
   /* ── Init / reinit Fabric canvas ── */
   const initCanvas = useCallback(async (w, h) => {
     if (!fabricLib) {
@@ -303,13 +329,23 @@ export default function Studio() {
       preserveObjectStacking: true,
       selection: true,
     })
+    // Transparent canvas background — no white box
+    requestAnimationFrame(() => {
+      if (canvas.lowerCanvasEl) canvas.lowerCanvasEl.style.background = 'transparent'
+      if (canvas.upperCanvasEl) canvas.upperCanvasEl.style.background = 'transparent'
+    })
     fabricRef.current = canvas
-    canvas.on('selection:created', () => setActiveObj(canvas.getActiveObject()))
-    canvas.on('selection:updated', () => setActiveObj(canvas.getActiveObject()))
-    canvas.on('selection:cleared', () => setActiveObj(null))
+    canvas.on('selection:created', () => { setActiveObj(canvas.getActiveObject()); setTimeout(updateToolbarPos, 0) })
+    canvas.on('selection:updated', () => { setActiveObj(canvas.getActiveObject()); setTimeout(updateToolbarPos, 0) })
+    canvas.on('selection:cleared', () => { setActiveObj(null); setToolbarPos(null) })
+    canvas.on('object:moving',  updateToolbarPos)
+    canvas.on('object:scaling', updateToolbarPos)
+    canvas.on('object:rotating', updateToolbarPos)
+    canvas.on('object:modified', updateToolbarPos)
     setActiveObj(null)
+    setToolbarPos(null)
     setHasContent(false)
-  }, [])
+  }, [updateToolbarPos])
 
   /* ── Measure canvas area and init on format / open change ── */
   useEffect(() => {
@@ -350,7 +386,6 @@ export default function Studio() {
         transparentCorners: false,
         borderColor: '#f97316',
         borderScaleFactor: 1.5,
-        clipPath: new fabricLib.Rect({ width: w, height: h, left: -w/2, top: -h/2, absolutePositioned: false }),
       })
       canvas.clear()
       canvas.setBackgroundColor(null, () => {})
@@ -707,9 +742,9 @@ export default function Studio() {
           className={styles.canvasArea}
           style={{ display: canvasOpen ? 'flex' : 'none' }}
         >
-          <div className={styles.canvasScroll}>
+          <div ref={canvasScrollRef} className={styles.canvasScroll}>
 
-            {/* Empty state — no frame shown yet */}
+            {/* Empty state */}
             {!hasContent && !genLoading && (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}><Wand2 size={28} /></div>
@@ -718,55 +753,55 @@ export default function Studio() {
               </div>
             )}
 
-            {/* Canvas frame — shown during loading (skeleton) AND when has content */}
-            <div className={styles.canvasOuter} style={{ visibility: (!hasContent && !genLoading) ? 'hidden' : 'visible' }}>
-
-              <div className={styles.canvasWrap}>
-                {/* Skeleton shimmer — sibling to the container, never touches Fabric's DOM */}
-                {genLoading && <div className={styles.skeleton} />}
-                {/* React only manages this div; Fabric owns everything inside it */}
-                <div
-                  ref={canvasContainerRef}
-                  style={{ opacity: genLoading ? 0 : 1, transition: 'opacity .3s', display: 'block', pointerEvents: 'auto' }}
-                />
-              </div>
-
-              {/* Generating label under frame */}
-              {genLoading && (
+            {/* Skeleton shimmer while generating */}
+            {genLoading && (
+              <div className={styles.canvasOuter}>
+                <div className={styles.canvasWrap} style={{ width: displayRef.current.w, height: displayRef.current.h }}>
+                  <div className={styles.skeleton} />
+                </div>
                 <div className={styles.genLabel}>
                   <div className={styles.genDot} /><div className={styles.genDot} /><div className={styles.genDot} />
                   <span>Generating…</span>
                 </div>
-              )}
-
-              {!genLoading && hasContent && (
-                <div className={styles.canvasMeta}>
-                  <span>{format.w} × {format.h} px</span>
-                  <span className={styles.dot} />
-                  <span>{format.ratio}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Floating toolbar — appears above canvas when image selected */}
-          {activeObj && hasContent && (
-            <div className={styles.floatToolbar}>
-              <span className={styles.floatHint}>Move · drag corners to resize</span>
-              <div className={styles.floatActions}>
-                <button className={styles.floatBtn} onClick={exportPNG}>
-                  <Download size={12} /> PNG
-                </button>
-                <button className={styles.floatBtn} onClick={exportJPG}>
-                  <Download size={12} /> JPG
-                </button>
-                <span className={styles.floatDivider} />
-                <button className={`${styles.floatBtn} ${styles.floatBtnDanger}`} onClick={deleteSelected}>
-                  <Trash2 size={12} />
-                </button>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Canvas — no frame, image floats on dotted bg */}
+            <div
+              ref={canvasContainerRef}
+              style={{ opacity: genLoading ? 0 : 1, transition: 'opacity .3s', display: 'block', pointerEvents: 'auto', position: 'relative' }}
+            />
+
+            {/* Floating toolbar — above selected image */}
+            {activeObj && hasContent && toolbarPos && (
+              <div
+                className={styles.floatToolbar}
+                style={{ left: toolbarPos.left, top: toolbarPos.top }}
+              >
+                <span className={styles.floatHint}>Move · resize</span>
+                <div className={styles.floatActions}>
+                  <button className={styles.floatBtn} onClick={exportPNG}>
+                    <Download size={12} /> PNG
+                  </button>
+                  <button className={styles.floatBtn} onClick={exportJPG}>
+                    <Download size={12} /> JPG
+                  </button>
+                  <span className={styles.floatDivider} />
+                  <button className={`${styles.floatBtn} ${styles.floatBtnDanger}`} onClick={deleteSelected}>
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!genLoading && hasContent && (
+              <div className={styles.canvasMeta} style={{ position: 'absolute', bottom: 52, left: '50%', transform: 'translateX(-50%)' }}>
+                <span>{format.w} × {format.h} px</span>
+                <span className={styles.dot} />
+                <span>{format.ratio}</span>
+              </div>
+            )}
+          </div>
 
           {/* Footer */}
           <div className={styles.canvasFooter}>
