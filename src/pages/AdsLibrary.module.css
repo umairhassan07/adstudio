@@ -82,10 +82,31 @@
 .adOverlay {
   position: absolute; inset: 0;
   background: rgba(0,0,0,.42);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
   opacity: 0; transition: opacity .18s;
 }
 .adCard:hover .adOverlay { opacity: 1; }
+
+.overlayViewBtn {
+  background: rgba(255,255,255,.15) !important;
+  border: 1.5px solid rgba(255,255,255,.35) !important;
+  color: white !important;
+  backdrop-filter: blur(4px);
+}
+.overlayViewBtn:hover { background: rgba(255,255,255,.28) !important; }
+
+/* Delete button on card — top right, appears on hover */
+.deleteCardBtn {
+  position: absolute; top: 7px; right: 7px;
+  width: 26px; height: 26px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.55); color: rgba(255,255,255,.7);
+  border: 1px solid rgba(255,255,255,.15);
+  opacity: 0; transition: opacity .15s, background .12s, color .12s;
+  backdrop-filter: blur(4px);
+}
+.adCard:hover .deleteCardBtn { opacity: 1; }
+.deleteCardBtn:hover { background: rgba(239,68,68,.8) !important; color: white !important; }
 
 .platformBadge {
   position: absolute; top: 8px; left: 8px;
@@ -114,6 +135,13 @@
   border: 1px solid var(--border); flex-shrink: 0;
 }
 .rowInfo { flex: 1; min-width: 0; }
+.rowActions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.rowDeleteBtn {
+  color: var(--text-muted) !important;
+  border: 1.5px solid var(--border) !important;
+  background: transparent !important;
+}
+.rowDeleteBtn:hover { color: var(--red) !important; border-color: #fecaca !important; background: #fff5f5 !important; }
 
 /* Empty */
 .empty {
@@ -121,6 +149,54 @@
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 10px; padding: 72px 0;
   color: var(--text-muted); font-size: 13.5px;
+}
+
+/* ── View Modal ── */
+.viewModal {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: 0 32px 80px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.1);
+  width: 860px; max-width: 96vw;
+  max-height: 92vh;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.viewModalHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.viewModalTitle { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.viewModalMeta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.viewModalHeaderActions { display: flex; align-items: center; gap: 8px; }
+.viewDeleteBtn {
+  color: var(--text-muted) !important;
+  border: 1.5px solid var(--border) !important;
+  background: transparent !important;
+}
+.viewDeleteBtn:hover { color: var(--red) !important; border-color: #fecaca !important; background: #fff5f5 !important; }
+
+.viewModalImgWrap {
+  flex: 1; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: #f0f0ee;
+  background-image: radial-gradient(circle, #d8d8d6 1px, transparent 1px);
+  background-size: 20px 20px;
+  padding: 28px; min-height: 0;
+}
+.viewModalImg {
+  max-width: 100%; max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.1);
+}
+.viewModalFooter {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--gray-50);
 }
 
 /* Modal */

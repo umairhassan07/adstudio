@@ -1,19 +1,23 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
-import { Search, Filter, Upload, Copy, Grid3x3, List, X, Wand2 } from 'lucide-react'
+import {
+  Search, Filter, Upload, Copy, Grid3x3, List, X,
+  Wand2, Eye, Trash2, Download, ExternalLink,
+} from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { platforms, categories } from '../data/sampleAds'
 import styles from './AdsLibrary.module.css'
 
 export default function AdsLibrary() {
-  const { ads, addAd, setActiveCanvasAd } = useApp()
+  const { ads, addAd, deleteAd, setActiveCanvasAd } = useApp()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [platform, setPlatform] = useState('All')
   const [category, setCategory] = useState('All')
   const [view, setView] = useState('grid')
   const [showUpload, setShowUpload] = useState(false)
+  const [viewAd, setViewAd] = useState(null)
 
   const hasFilters = !!(query || platform !== 'All' || category !== 'All')
 
@@ -28,6 +32,11 @@ export default function AdsLibrary() {
   function openCanvas(ad) {
     setActiveCanvasAd(ad)
     navigate('/canvas')
+  }
+
+  function handleDelete(id) {
+    deleteAd(id)
+    if (viewAd?.id === id) setViewAd(null)
   }
 
   return (
@@ -89,14 +98,24 @@ export default function AdsLibrary() {
       {view === 'grid' ? (
         <div className={styles.grid}>
           {filtered.map(ad => (
-            <AdCard key={ad.id} ad={ad} onClone={() => openCanvas(ad)} />
+            <AdCard
+              key={ad.id} ad={ad}
+              onView={() => setViewAd(ad)}
+              onClone={() => openCanvas(ad)}
+              onDelete={() => handleDelete(ad.id)}
+            />
           ))}
           {filtered.length === 0 && <EmptyState hasFilters={hasFilters} onNavigate={navigate} />}
         </div>
       ) : (
         <div className={styles.listView}>
           {filtered.map(ad => (
-            <AdRow key={ad.id} ad={ad} onClone={() => openCanvas(ad)} />
+            <AdRow
+              key={ad.id} ad={ad}
+              onView={() => setViewAd(ad)}
+              onClone={() => openCanvas(ad)}
+              onDelete={() => handleDelete(ad.id)}
+            />
           ))}
           {filtered.length === 0 && <EmptyState hasFilters={hasFilters} onNavigate={navigate} />}
         </div>
@@ -104,22 +123,38 @@ export default function AdsLibrary() {
 
       {/* Upload modal */}
       {showUpload && <UploadModal onClose={() => setShowUpload(false)} onAdd={addAd} />}
+
+      {/* View image modal */}
+      {viewAd && (
+        <ViewModal
+          ad={viewAd}
+          onClose={() => setViewAd(null)}
+          onDelete={() => handleDelete(viewAd.id)}
+          onClone={() => { openCanvas(viewAd); setViewAd(null) }}
+        />
+      )}
     </div>
   )
 }
 
 /* ── Ad Card (Grid) ── */
-function AdCard({ ad, onClone }) {
+function AdCard({ ad, onView, onClone, onDelete }) {
   return (
     <div className={styles.adCard}>
       <div className={styles.adThumbWrap}>
         <img src={ad.thumbnail} alt={ad.title} className={styles.adThumb} />
         <div className={styles.adOverlay}>
+          <button className={`btn btn-sm ${styles.overlayViewBtn}`} onClick={onView}>
+            <Eye size={13} /> View
+          </button>
           <button className="btn btn-primary btn-sm" onClick={onClone}>
             <Copy size={13} /> Clone
           </button>
         </div>
         <span className={`badge badge-orange ${styles.platformBadge}`}>{ad.platform}</span>
+        <button className={styles.deleteCardBtn} onClick={e => { e.stopPropagation(); onDelete() }} title="Delete">
+          <Trash2 size={12} />
+        </button>
       </div>
       <div className={styles.adBody}>
         <p className={styles.adTitle}>{ad.title}</p>
@@ -134,21 +169,97 @@ function AdCard({ ad, onClone }) {
 }
 
 /* ── Ad Row (List) ── */
-function AdRow({ ad, onClone }) {
+function AdRow({ ad, onView, onClone, onDelete }) {
   return (
     <div className={styles.adRow}>
-      <img src={ad.thumbnail} alt={ad.title} className={styles.rowThumb} />
+      <img
+        src={ad.thumbnail} alt={ad.title} className={styles.rowThumb}
+        onClick={onView} style={{ cursor: 'pointer' }}
+        title="Click to view"
+      />
       <div className={styles.rowInfo}>
         <p className={styles.adTitle}>{ad.title}</p>
         <p className={styles.adMeta}>{ad.brand}</p>
       </div>
-      <span className={`badge badge-orange`}>{ad.platform}</span>
-      <span className={`badge badge-gray`}>{ad.category}</span>
+      <span className="badge badge-orange">{ad.platform}</span>
+      <span className="badge badge-gray">{ad.category}</span>
       <span className={styles.adMeta}>{ad.format}</span>
       <span className={styles.adClones}>{ad.clones} clones</span>
-      <button className="btn btn-primary btn-sm" onClick={onClone}>
-        <Copy size={13} /> Clone
-      </button>
+      <div className={styles.rowActions}>
+        <button className="btn btn-outline btn-sm" onClick={onView} title="View">
+          <Eye size={13} />
+        </button>
+        <button className="btn btn-primary btn-sm" onClick={onClone}>
+          <Copy size={13} /> Clone
+        </button>
+        <button className={`btn btn-sm ${styles.rowDeleteBtn}`} onClick={onDelete} title="Delete">
+          <Trash2 size={13} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ── View Image Modal ── */
+function ViewModal({ ad, onClose, onDelete, onClone }) {
+  // Close on Escape key
+  useEffect(() => {
+    const handler = e => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  function downloadImage() {
+    const a = document.createElement('a')
+    a.href = ad.thumbnail
+    a.download = `${ad.title || 'ad'}.jpg`
+    a.target = '_blank'
+    a.click()
+  }
+
+  function confirmDelete() {
+    if (window.confirm(`"${ad.title}" ko delete karna chahte ho?`)) onDelete()
+  }
+
+  return (
+    <div className={styles.modalOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.viewModal}>
+
+        {/* Header */}
+        <div className={styles.viewModalHeader}>
+          <div>
+            <p className={styles.viewModalTitle}>{ad.title}</p>
+            <p className={styles.viewModalMeta}>{ad.brand} · {ad.platform} · {ad.format}</p>
+          </div>
+          <div className={styles.viewModalHeaderActions}>
+            <button className={`btn btn-outline btn-sm`} onClick={downloadImage} title="Download">
+              <Download size={13} /> Download
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={onClone}>
+              <Copy size={13} /> Clone
+            </button>
+            <button className={`btn btn-sm ${styles.viewDeleteBtn}`} onClick={confirmDelete} title="Delete">
+              <Trash2 size={13} />
+            </button>
+            <button className={styles.modalClose} onClick={onClose}><X size={18} /></button>
+          </div>
+        </div>
+
+        {/* Image */}
+        <div className={styles.viewModalImgWrap}>
+          <img src={ad.thumbnail} alt={ad.title} className={styles.viewModalImg} />
+        </div>
+
+        {/* Footer meta */}
+        <div className={styles.viewModalFooter}>
+          <span className="badge badge-orange">{ad.platform}</span>
+          <span className="badge badge-gray">{ad.category}</span>
+          <span className={styles.adMeta}>{ad.format}</span>
+          <span className={styles.adMeta}>{ad.clones} clones</span>
+          {ad.tags?.map(t => <span key={t} className="badge badge-gray">{t}</span>)}
+        </div>
+
+      </div>
     </div>
   )
 }
