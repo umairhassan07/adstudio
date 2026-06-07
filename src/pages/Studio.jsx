@@ -447,49 +447,36 @@ export default function Studio() {
 
   return (
     <div className={styles.page}>
-
-      {/* ── Format bar ── */}
-      <div className={styles.formatBar}>
-        <div className={styles.formatBarLeft}>
-          <span className={styles.formatBarLabel}>Format</span>
-          <div className={styles.formatTabs}>
-            {FORMATS.map(f => (
-              <button
-                key={f.id}
-                className={`${styles.formatTab} ${format.id === f.id ? styles.formatTabActive : ''}`}
-                onClick={() => { setFormat(f); setHasContent(false) }}
-              >
-                {f.mobile ? <Smartphone size={11} /> : <Monitor size={11} />}
-                {f.label}
-                <span className={styles.formatRatio}>{f.ratio}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className={styles.formatBarRight}>
-          <span className={styles.formatPlatform}>{format.platform}</span>
-          {hasContent && (
-            <>
-              <button className="btn btn-outline btn-sm" onClick={exportJPG}><Download size={13} /> JPG</button>
-              <button className="btn btn-primary btn-sm" onClick={exportPNG}><Download size={13} /> PNG</button>
-            </>
-          )}
-          <button
-            className={`${styles.canvasToggle} ${canvasOpen ? styles.canvasToggleOn : ''}`}
-            onClick={() => setCanvasOpen(v => !v)}
-            title={canvasOpen ? 'Hide canvas' : 'Show canvas'}
-          >
-            {canvasOpen ? <PanelRightClose size={15} /> : <PanelRight size={15} />}
-            {canvasOpen ? 'Hide canvas' : 'Canvas'}
-          </button>
-        </div>
-      </div>
-
       {/* ── Workspace ── */}
       <div className={styles.workspace}>
 
         {/* Chat panel — 50% default, draggable */}
         <div className={styles.chatPanel} style={chatWidth ? { width: chatWidth } : {}}>
+
+          {/* Chat header — format selector + canvas toggle */}
+          <div className={styles.chatHeader}>
+            <div className={styles.formatPills}>
+              {FORMATS.map(f => (
+                <button
+                  key={f.id}
+                  className={`${styles.formatPill} ${format.id === f.id ? styles.formatPillActive : ''}`}
+                  onClick={() => { setFormat(f); setHasContent(false) }}
+                  title={f.platform}
+                >
+                  {f.mobile ? <Smartphone size={11} /> : <Monitor size={11} />}
+                  <span>{f.label}</span>
+                  <span className={styles.formatPillRatio}>{f.ratio}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              className={`${styles.canvasToggle} ${canvasOpen ? styles.canvasToggleOn : ''}`}
+              onClick={() => setCanvasOpen(v => !v)}
+              title={canvasOpen ? 'Hide canvas' : 'Show canvas'}
+            >
+              {canvasOpen ? <PanelRightClose size={14} /> : <PanelRight size={14} />}
+            </button>
+          </div>
 
           {/* Reference image */}
           <div className={styles.refSection}>
@@ -587,26 +574,35 @@ export default function Studio() {
             </div>
           )}
 
-          <form className={styles.chatInput} onSubmit={sendMessage}>
-            <textarea
-              className={styles.chatTextarea}
-              placeholder={`Describe your ${format.label} ad…`}
-              value={input}
-              rows={3}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-            />
-            <div className={styles.chatActions}>
-              <button type="button" className={styles.quickGenBtn}
-                onClick={() => generateImage(input)} disabled={!input.trim() || genLoading}
-                title="Generate directly">
-                {genLoading ? <RefreshCw size={13} className={styles.spin} /> : <Wand2 size={13} />}
-              </button>
-              <button type="submit" className={styles.sendBtn} disabled={!input.trim() || chatLoading} title="Refine with AI">
-                <Send size={13} />
-              </button>
-            </div>
-          </form>
+          <div className={styles.chatInputWrap}>
+            <form className={styles.chatInput} onSubmit={sendMessage}>
+              <textarea
+                className={styles.chatTextarea}
+                placeholder={`Describe your ${format.label} ad…`}
+                value={input}
+                rows={1}
+                onChange={e => {
+                  setInput(e.target.value)
+                  e.target.style.height = 'auto'
+                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+                }}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+              />
+              <div className={styles.chatActions}>
+                <button type="button" className={styles.quickGenBtn}
+                  onClick={() => generateImage(input)} disabled={!input.trim() || genLoading}
+                  title="Generate image directly">
+                  {genLoading ? <RefreshCw size={13} className={styles.spin} /> : <Wand2 size={13} />}
+                </button>
+                <button type="submit" className={styles.sendBtn} disabled={!input.trim() || chatLoading} title="Refine with AI first">
+                  <Send size={13} />
+                </button>
+              </div>
+            </form>
+            <p className={styles.inputHint}>
+              <kbd>Enter</kbd> to chat · <kbd>⌘↵</kbd> or <Wand2 size={10} style={{display:'inline', verticalAlign:'middle'}} /> to generate
+            </p>
+          </div>
         </div>
 
         {/* Resize handle — only when canvas is open */}
