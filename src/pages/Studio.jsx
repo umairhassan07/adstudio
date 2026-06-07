@@ -1,20 +1,30 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import {
   Sparkles, Send, Upload, Download, RefreshCw,
-  Trash2, ImageIcon, Monitor, Smartphone, X,
-  ZoomIn, ZoomOut, Maximize2, Wand2,
+  Trash2, ImageIcon, Monitor, X,
+  ZoomIn, ZoomOut, Maximize2, Wand2, PanelRight, PanelRightClose,
 } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { useApp } from '../context/AppContext'
 import styles from './Studio.module.css'
 
 const FORMATS = [
-  { id: 'story',     label: 'Story',     ratio: '9:16',   w: 1080, h: 1920, display: { w: 240, h: 426 }, platform: 'Instagram · TikTok · Snapchat', mobile: true  },
-  { id: 'portrait',  label: 'Portrait',  ratio: '4:5',    w: 1080, h: 1350, display: { w: 292, h: 365 }, platform: 'Instagram · Facebook',          mobile: true  },
-  { id: 'square',    label: 'Square',    ratio: '1:1',    w: 1080, h: 1080, display: { w: 360, h: 360 }, platform: 'Instagram · Facebook · Twitter', mobile: true  },
-  { id: 'landscape', label: 'Landscape', ratio: '16:9',   w: 1920, h: 1080, display: { w: 500, h: 281 }, platform: 'YouTube · Twitter · LinkedIn',   mobile: false },
-  { id: 'banner',    label: 'Banner',    ratio: '1.91:1', w: 1200, h: 628,  display: { w: 500, h: 262 }, platform: 'Facebook · Google Display',      mobile: false },
+  { id: 'story',     label: 'Story',     ratio: '9:16',   w: 1080, h: 1920, aspect: 9/16,   platform: 'Instagram · TikTok · Snapchat', mobile: true  },
+  { id: 'portrait',  label: 'Portrait',  ratio: '4:5',    w: 1080, h: 1350, aspect: 4/5,   platform: 'Instagram · Facebook',          mobile: true  },
+  { id: 'square',    label: 'Square',    ratio: '1:1',    w: 1080, h: 1080, aspect: 1,     platform: 'Instagram · Facebook · Twitter', mobile: true  },
+  { id: 'landscape', label: 'Landscape', ratio: '16:9',   w: 1920, h: 1080, aspect: 16/9,  platform: 'YouTube · Twitter · LinkedIn',   mobile: false },
+  { id: 'banner',    label: 'Banner',    ratio: '1.91:1', w: 1200, h: 628,  aspect: 1.91,  platform: 'Facebook · Google Display',      mobile: false },
 ]
+
+/* Compute canvas display size to fill ~80% of container */
+function calcDisplay(aspect, containerW, containerH) {
+  const maxH = Math.floor(containerH * 0.82)
+  const maxW = Math.floor(containerW * 0.82)
+  let h = maxH
+  let w = Math.floor(h * aspect)
+  if (w > maxW) { w = maxW; h = Math.floor(w / aspect) }
+  return { w: Math.max(w, 60), h: Math.max(h, 60) }
+}
 
 const MIN_CHAT_W = 280
 const MAX_CHAT_W = 600
@@ -172,14 +182,16 @@ let fabricLib = null
 export default function Studio() {
   const { ads, dna, dnaComplete, addAd } = useApp()
 
-  const [format, setFormat]       = useState(FORMATS[0])
-  const [chatWidth, setChatWidth] = useState(null) // null = 50% (CSS default)
+  const [format, setFormat]         = useState(FORMATS[0])
+  const [chatWidth, setChatWidth]   = useState(null)
   const [hasContent, setHasContent] = useState(false)
-  const [lastGenUrl, setLastGenUrl] = useState(null)
+  const [canvasOpen, setCanvasOpen] = useState(false)  // canvas panel hidden by default
 
-  const canvasContainerRef = useRef(null)   // React-managed div
-  const fabricRef = useRef(null)            // Fabric canvas instance
-  const [zoom, setZoom]           = useState(100)
+  const canvasContainerRef = useRef(null)
+  const canvasAreaRef       = useRef(null)  // measures available space
+  const fabricRef           = useRef(null)
+  const displayRef          = useRef({ w: 320, h: 568 })  // current canvas display size
+  const [zoom, setZoom]     = useState(100)
   const [activeObj, setActiveObj] = useState(null)
 
   const welcomeMessage = useMemo(() => {
@@ -242,54 +254,72 @@ export default function Studio() {
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
   }, [])
 
-  /* ── Init canvas on format change ── */
-  useEffect(() => {
-    let mounted = true
-    async function init() {
-      if (!fabricLib) {
-        const mod = await import('fabric')
-        fabricLib = mod.fabric || mod.default
-      }
-      if (!mounted || !canvasContainerRef.current) return
-
-      // Dispose previous Fabric instance
-      if (fabricRef.current) {
-        fabricRef.current.dispose()
-        fabricRef.current = null
-      }
-
-      // Clear container and create a fresh canvas element — React never owns this node
-      canvasContainerRef.current.innerHTML = ''
-      const canvasEl = document.createElement('canvas')
-      canvasContainerRef.current.appendChild(canvasEl)
-
-      const { w, h } = format.display
-      const canvas = new fabricLib.Canvas(canvasEl, {
-        width: w, height: h, backgroundColor: '#ffffff', preserveObjectStacking: true,
-      })
-      fabricRef.current = canvas
-      canvas.on('selection:created', () => setActiveObj(canvas.getActiveObject()))
-      canvas.on('selection:updated', () => setActiveObj(canvas.getActiveObject()))
-      canvas.on('selection:cleared', () => setActiveObj(null))
-      setActiveObj(null)
+  /* ── Init / reinit Fabric canvas ── */
+  const initCanvas = useCallback(async (w, h) => {
+    if (!fabricLib) {
+      const mod = await import('fabric')
+      fabricLib = mod.fabric || mod.default
     }
-    init()
-    return () => { mounted = false }
-  }, [format])
+    if (!canvasContainerRef.current) return
+
+    if (fabricRef.current) { fabricRef.current.dispose(); fabricRef.current = null }
+
+    canvasContainerRef.current.innerHTML = ''
+    const el = document.createElement('canvas')
+    canvasContainerRef.current.appendChild(el)
+
+    const canvas = new fabricLib.Canvas(el, {
+      width: w, height: h,
+      backgroundColor: '#ffffff',
+      preserveObjectStacking: true,
+      selection: true,
+    })
+    fabricRef.current = canvas
+    canvas.on('selection:created', () => setActiveObj(canvas.getActiveObject()))
+    canvas.on('selection:updated', () => setActiveObj(canvas.getActiveObject()))
+    canvas.on('selection:cleared', () => setActiveObj(null))
+    setActiveObj(null)
+    setHasContent(false)
+  }, [])
+
+  /* ── Measure canvas area and init on format / open change ── */
+  useEffect(() => {
+    if (!canvasOpen) return
+    const area = canvasAreaRef.current
+    if (!area) return
+
+    const measure = () => {
+      const { width, height } = area.getBoundingClientRect()
+      const d = calcDisplay(format.aspect, width, height)
+      displayRef.current = d
+      initCanvas(d.w, d.h)
+    }
+
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(area)
+    return () => ro.disconnect()
+  }, [format, canvasOpen, initCanvas])
 
   function placeImage(url) {
     const canvas = fabricRef.current
     if (!canvas || !fabricLib) return
     fabricLib.Image.fromURL(url, img => {
-      const { w, h } = format.display
+      const { w, h } = displayRef.current
       const scale = Math.min(w / img.width, h / img.height, 1)
       img.set({
         left: w / 2, top: h / 2,
         originX: 'center', originY: 'center',
         scaleX: scale, scaleY: scale,
-        selectable: true, hasControls: true, hasBorders: true,
-        cornerColor: '#f97316', cornerSize: 10, transparentCorners: false,
+        selectable: true,
+        hasControls: true,
+        hasBorders: true,
+        lockUniScaling: false,
+        cornerColor: '#f97316',
+        cornerSize: 10,
+        transparentCorners: false,
         borderColor: '#f97316',
+        borderScaleFactor: 1.5,
       })
       canvas.clear()
       canvas.setBackgroundColor('#ffffff', () => {})
@@ -297,9 +327,7 @@ export default function Studio() {
       canvas.setActiveObject(img)
       canvas.renderAll()
       setHasContent(true)
-      setLastGenUrl(url)
 
-      // Save to Ads Library
       addAd({
         title: `AI Ad — ${format.label}`,
         brand: dna?.brandName || 'AI Studio',
@@ -328,12 +356,14 @@ export default function Studio() {
   }
   function exportPNG() {
     const canvas = fabricRef.current; if (!canvas) return
-    const url = canvas.toDataURL({ format: 'png', multiplier: format.w / format.display.w })
+    const multiplier = format.w / displayRef.current.w
+    const url = canvas.toDataURL({ format: 'png', multiplier })
     Object.assign(document.createElement('a'), { href: url, download: `ad-${format.id}-${Date.now()}.png` }).click()
   }
   function exportJPG() {
     const canvas = fabricRef.current; if (!canvas) return
-    const url = canvas.toDataURL({ format: 'jpeg', quality: 0.92, multiplier: format.w / format.display.w })
+    const multiplier = format.w / displayRef.current.w
+    const url = canvas.toDataURL({ format: 'jpeg', quality: 0.92, multiplier })
     Object.assign(document.createElement('a'), { href: url, download: `ad-${format.id}-${Date.now()}.jpg` }).click()
   }
 
@@ -394,6 +424,7 @@ export default function Studio() {
 
   async function generateImage(promptOverride) {
     const prompt = promptOverride || lastPrompt || input.trim(); if (!prompt) return
+    setCanvasOpen(true)   // auto-reveal canvas panel
     setGenLoading(true)
     try {
       const url = await generateWithKie(prompt, format)
@@ -441,6 +472,14 @@ export default function Studio() {
               <button className="btn btn-primary btn-sm" onClick={exportPNG}><Download size={13} /> PNG</button>
             </>
           )}
+          <button
+            className={`${styles.canvasToggle} ${canvasOpen ? styles.canvasToggleOn : ''}`}
+            onClick={() => setCanvasOpen(v => !v)}
+            title={canvasOpen ? 'Hide canvas' : 'Show canvas'}
+          >
+            {canvasOpen ? <PanelRightClose size={15} /> : <PanelRight size={15} />}
+            {canvasOpen ? 'Hide canvas' : 'Canvas'}
+          </button>
         </div>
       </div>
 
@@ -548,11 +587,15 @@ export default function Studio() {
           </form>
         </div>
 
-        {/* Resize handle */}
-        <div className={styles.resizeHandle} onMouseDown={onResizeMouseDown} />
+        {/* Resize handle — only when canvas is open */}
+        {canvasOpen && <div className={styles.resizeHandle} onMouseDown={onResizeMouseDown} />}
 
-        {/* Canvas area */}
-        <div className={styles.canvasArea}>
+        {/* Canvas area — hidden when closed */}
+        <div
+          ref={canvasAreaRef}
+          className={styles.canvasArea}
+          style={{ display: canvasOpen ? 'flex' : 'none' }}
+        >
           <div className={styles.canvasScroll}>
 
             {/* Empty state — no frame shown yet */}
@@ -573,7 +616,7 @@ export default function Studio() {
                 {/* React only manages this div; Fabric owns everything inside it */}
                 <div
                   ref={canvasContainerRef}
-                  style={{ opacity: genLoading ? 0 : 1, transition: 'opacity .3s', lineHeight: 0 }}
+                  style={{ opacity: genLoading ? 0 : 1, transition: 'opacity .3s', display: 'block', pointerEvents: 'auto' }}
                 />
               </div>
 
