@@ -410,9 +410,11 @@ export default function Studio() {
 
     const userMessage = { role: 'user', content: text + refNote }
     const next = [...messages, userMessage]
-    // Show message in UI without the technical note
-    setMessages([...messages, { role: 'user', content: text }, { role: 'assistant', content: '' }])
+    // Show in UI — image attached to message bubble, cleared from input
+    const sentImage = refImage ? { url: refImage.url, name: refImage.name } : null
+    setMessages([...messages, { role: 'user', content: text, image: sentImage }, { role: 'assistant', content: '' }])
     setInput('')
+    setRefImage(null)   // clear from input after sending
     setChatLoading(true)
     let full = ''
     let promptStarted = false
@@ -501,26 +503,34 @@ export default function Studio() {
           {/* Messages */}
           <div className={styles.chatMessages}>
             {/* Clear chat button — only shown when there are user messages */}
-            {messages.some(m => m.role === 'user') && (
-              <div className={styles.clearChatRow}>
-                <button
-                  className={styles.clearChatBtn}
-                  onClick={() => {
-                    const fresh = [{ role: 'assistant', content: welcomeMessage }]
-                    setMessages(fresh)
-                    setLastPrompt('')
-                    localStorage.removeItem('studio_messages')
-                    localStorage.removeItem('studio_last_prompt')
-                  }}
-                >
-                  Clear chat
-                </button>
-              </div>
-            )}
+            <div className={styles.chatTopBar}>
+              <button
+                className={styles.newChatBtn}
+                onClick={() => {
+                  setMessages([{ role: 'assistant', content: welcomeMessage }])
+                  setLastPrompt('')
+                  setRefImage(null)
+                  localStorage.removeItem('studio_messages')
+                  localStorage.removeItem('studio_last_prompt')
+                }}
+              >
+                + New chat
+              </button>
+              <button
+                className={`${styles.previewToggleBtn} ${canvasOpen ? styles.previewToggleBtnOn : ''}`}
+                onClick={() => setCanvasOpen(v => !v)}
+              >
+                {canvasOpen ? <PanelRightClose size={12} /> : <PanelRight size={12} />}
+                {canvasOpen ? 'Hide preview' : 'Preview'}
+              </button>
+            </div>
             {messages.map((m, i) => (
               <div key={i} className={`${styles.chatMsg} ${m.role === 'user' ? styles.chatMsgUser : styles.chatMsgAI}`}>
                 {m.role === 'assistant' && <div className={styles.chatAvatar}><Sparkles size={11} /></div>}
                 <div className={styles.chatBubble}>
+                  {m.image && (
+                    <img src={m.image.url} alt={m.image.name} className={styles.msgRefImg} />
+                  )}
                   {m.content
                     .replace(/<prompt>[\s\S]*?<\/prompt>/g, '')  // strip <prompt> blocks
                     .replace(/\*\*Prompt:\*\*[\s\S]*/i, '')       // strip **Prompt:** fallback
