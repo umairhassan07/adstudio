@@ -1,0 +1,161 @@
+/* ── Design Tokens ── */
+:root {
+  /* Primary */
+  --orange-50:  #fff7ed;
+  --orange-100: #ffedd5;
+  --orange-200: #fed7aa;
+  --orange-300: #fdba74;
+  --orange-400: #fb923c;
+  --orange-500: #f97316;
+  --orange-600: #ea6c10;
+  --orange-700: #c2570c;
+
+  /* Neutrals */
+  --gray-50:  #fafafa;
+  --gray-100: #f5f5f5;
+  --gray-200: #e5e5e5;
+  --gray-300: #d4d4d4;
+  --gray-400: #a3a3a3;
+  --gray-500: #737373;
+  --gray-600: #525252;
+  --gray-700: #404040;
+  --gray-800: #262626;
+  --gray-900: #171717;
+
+  /* Semantic */
+  --bg-app:      #f8f6f3;
+  --bg-surface:  #ffffff;
+  --bg-hover:    #f5f5f5;
+  --border:      #e5e5e5;
+  --border-focus: #f97316;
+  --text-primary:   #171717;
+  --text-secondary: #525252;
+  --text-muted:     #a3a3a3;
+
+  /* Status */
+  --green:  #22c55e;
+  --red:    #ef4444;
+  --blue:   #3b82f6;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.05), 0 1px 4px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
+  --shadow-lg: 0 12px 36px rgba(0,0,0,.11), 0 4px 10px rgba(0,0,0,.06);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  /* Sidebar */
+  --sidebar-w: 240px;
+  --header-h:  60px;
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+input, textarea, select { font-family: inherit; }
+img { max-width: 100%; display: block; }
+ul { list-style: none; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+/* ── Utility ── */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;
+}
+
+/* ── Btn ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 500; line-height: 1;
+  transition: all .15s ease; white-space: nowrap;
+}
+.btn-primary {
+  background: var(--orange-500); color: #fff;
+  box-shadow: 0 1px 4px rgba(249,115,22,.3);
+}
+.btn-primary:hover { background: var(--orange-600); box-shadow: 0 4px 12px rgba(249,115,22,.35); }
+.btn-primary:active { transform: translateY(1px); box-shadow: none; }
+
+.btn-outline {
+  background: transparent; color: var(--text-primary);
+  border: 1.5px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--gray-300); background: var(--gray-50); }
+
+.btn-ghost {
+  background: transparent; color: var(--text-secondary);
+}
+.btn-ghost:hover { background: var(--gray-50); color: var(--text-primary); }
+
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+.btn-lg { padding: 11px 22px; font-size: 15px; }
+
+/* ── Badge ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 99px;
+  font-size: 11px; font-weight: 600; letter-spacing: .3px;
+}
+.badge-orange { background: var(--orange-100); color: var(--orange-700); }
+.badge-green  { background: #dcfce7; color: #166534; }
+.badge-gray   { background: var(--gray-100); color: var(--gray-600); }
+
+/* ── Card ── */
+.card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Input ── */
+.input {
+  width: 100%; padding: 9px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px; color: var(--text-primary);
+  background: var(--bg-surface);
+  transition: border-color .15s;
+  outline: none;
+}
+.input:focus { border-color: var(--orange-500); }
+.input::placeholder { color: var(--text-muted); }
+
+.label {
+  display: block; font-size: 13px;
+  font-weight: 500; color: var(--text-secondary);
+  margin-bottom: 5px;
+}
+
+/* ── Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn .25s ease forwards; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
