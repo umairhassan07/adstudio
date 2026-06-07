@@ -60,10 +60,21 @@ async function* streamDeepSeek(messages, dna, imageBase64 = null) {
     return
   }
 
-  const sys = `You are a senior ad creative director. Be brief — max 2 sentences of commentary.
+  const sys = `You are a world-class ad creative director and Flux AI prompt engineer. Reply in max 2 sentences, then output the image prompt.
 ${dna?.brandName ? `Brand: ${dna.brandName}.` : ''}${dna?.industry ? ` Industry: ${dna.industry}.` : ''}${dna?.toneOfVoice ? ` Tone: ${dna.toneOfVoice}.` : ''}${dna?.usp ? ` USP: ${dna.usp}.` : ''}
-${imageBase64 ? 'A reference image has been provided — match its style, colors and composition.' : ''}
-After your 2-sentence commentary, output ONLY <prompt>…</prompt> with NO heading, label, or extra text before or after it.`
+${imageBase64 ? 'Reference image provided — match its visual style, color palette and layout composition closely.' : ''}
+
+The <prompt> must produce a STUNNING, ultra-professional advertisement image. Follow these rules strictly:
+- Photorealistic, cinematic lighting, 8K quality, sharp focus
+- Bold clean typography — use ONLY 2-4 words max per text element so AI renders them correctly (e.g. "Build Smarter", "Future Ready"). Never long sentences.
+- Strong color contrast — specify exact hex colors matching the brand
+- Professional ad layout: dramatic hero visual, bold headline, brief tagline, CTA button
+- Specify fonts: bold sans-serif (e.g. "Helvetica Neue Bold", "Inter Black")
+- Cinematic depth, professional color grading
+- NO lorem ipsum, NO random gibberish text — only short crisp phrases
+- Style: premium editorial advertising photography, agency-quality
+
+Output ONLY <prompt>…</prompt> with nothing before or after it.`
 
   // Build the last user message — include image if present
   const builtMessages = messages.map((m, i) => {
@@ -87,7 +98,7 @@ After your 2-sentence commentary, output ONLY <prompt>…</prompt> with NO headi
       messages: [{ role: 'system', content: sys }, ...builtMessages],
       temperature: 0.7,
       stream: true,
-      max_tokens: 300,
+      max_tokens: 500,
     }),
   })
   if (!res.ok) throw new Error(`DeepSeek ${res.status}`)
@@ -271,7 +282,7 @@ export default function Studio() {
 
     const canvas = new fabricLib.Canvas(el, {
       width: w, height: h,
-      backgroundColor: '#ffffff',
+      backgroundColor: null,
       preserveObjectStacking: true,
       selection: true,
     })
@@ -307,7 +318,8 @@ export default function Studio() {
     if (!canvas || !fabricLib) return
     fabricLib.Image.fromURL(url, img => {
       const { w, h } = displayRef.current
-      const scale = Math.min(w / img.width, h / img.height, 1)
+      // Cover scaling — fills entire canvas, no white bars
+      const scale = Math.max(w / img.width, h / img.height)
       img.set({
         left: w / 2, top: h / 2,
         originX: 'center', originY: 'center',
@@ -321,9 +333,10 @@ export default function Studio() {
         transparentCorners: false,
         borderColor: '#f97316',
         borderScaleFactor: 1.5,
+        clipPath: new fabricLib.Rect({ width: w, height: h, left: -w/2, top: -h/2, absolutePositioned: false }),
       })
       canvas.clear()
-      canvas.setBackgroundColor('#ffffff', () => {})
+      canvas.setBackgroundColor(null, () => {})
       canvas.add(img)
       canvas.setActiveObject(img)
       canvas.renderAll()
@@ -673,20 +686,19 @@ export default function Studio() {
             </div>
           </div>
 
-          {/* Floating selection toolbar */}
+          {/* Floating toolbar — appears above canvas when image selected */}
           {activeObj && hasContent && (
-            <div className={styles.selectionBar}>
-              <span className={styles.selectionHint}>
-                Drag to move · handles to resize
-              </span>
-              <div className={styles.selectionActions}>
-                <button className={styles.selActionBtn} onClick={exportPNG}>
+            <div className={styles.floatToolbar}>
+              <span className={styles.floatHint}>Move · drag corners to resize</span>
+              <div className={styles.floatActions}>
+                <button className={styles.floatBtn} onClick={exportPNG}>
                   <Download size={12} /> PNG
                 </button>
-                <button className={styles.selActionBtn} onClick={exportJPG}>
+                <button className={styles.floatBtn} onClick={exportJPG}>
                   <Download size={12} /> JPG
                 </button>
-                <button className={`${styles.selActionBtn} ${styles.selActionDanger}`} onClick={deleteSelected}>
+                <span className={styles.floatDivider} />
+                <button className={`${styles.floatBtn} ${styles.floatBtnDanger}`} onClick={deleteSelected}>
                   <Trash2 size={12} />
                 </button>
               </div>

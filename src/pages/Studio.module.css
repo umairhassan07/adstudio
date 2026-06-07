@@ -395,7 +395,7 @@
   flex: 1; overflow: auto;
   display: flex; align-items: center; justify-content: center;
   padding: 32px;
-  position: relative;
+  position: relative; /* anchors floating toolbar */
 }
 
 /* Empty state */
@@ -449,44 +449,54 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin .8s linear infinite; }
 
-/* Selection toolbar — floats above footer when object is selected */
-.selectionBar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 7px 16px;
-  background: var(--gray-900);
-  border-top: 1px solid #333;
-  flex-shrink: 0;
-  gap: 12px;
-}
-.selectionHint {
-  font-size: 11.5px; color: var(--gray-400);
+/* Floating toolbar — appears above canvas on image select */
+.floatToolbar {
+  position: absolute;
+  top: 12px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(15,15,15,.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  padding: 6px 10px;
+  z-index: 20;
   white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0,0,0,.35);
+  animation: fadeUp .15s ease;
 }
-.selectionActions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.selActionBtn {
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.floatHint {
+  font-size: 11px; color: rgba(255,255,255,.45);
+  padding-right: 8px;
+  border-right: 1px solid rgba(255,255,255,.12);
+}
+.floatActions { display: flex; align-items: center; gap: 4px; }
+.floatBtn {
   display: flex; align-items: center; gap: 5px;
-  padding: 5px 10px; border-radius: 6px;
-  font-size: 12px; font-weight: 500;
-  color: var(--gray-200);
-  background: #2a2a2a; border: 1px solid #3a3a3a;
-  transition: background .12s, border-color .12s;
+  padding: 4px 10px; border-radius: 6px;
+  font-size: 12px; font-weight: 500; color: rgba(255,255,255,.85);
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1);
+  transition: background .12s; white-space: nowrap;
 }
-.selActionBtn:hover { background: #333; border-color: #555; color: white; }
-.selActionDanger:hover { background: #3d1515 !important; border-color: #7f1d1d !important; color: #fca5a5 !important; }
+.floatBtn:hover { background: rgba(255,255,255,.16); color: white; }
+.floatDivider { width: 1px; height: 16px; background: rgba(255,255,255,.12); margin: 0 2px; }
+.floatBtnDanger:hover { background: rgba(239,68,68,.25) !important; color: #fca5a5 !important; }
 
 /* Canvas outer */
 .canvasOuter {
   display: flex; flex-direction: column; align-items: center; gap: 12px;
 }
 
-/* Canvas wrap */
+/* Canvas wrap — no white bg, just shadow */
 .canvasWrap {
-  position: relative; border-radius: 3px; overflow: hidden;
+  position: relative; border-radius: 4px; overflow: hidden;
   box-shadow:
-    0 0 0 1px rgba(0,0,0,.07),
-    0 4px 16px rgba(0,0,0,.10),
-    0 20px 48px rgba(0,0,0,.13);
-  background: white;
+    0 4px 16px rgba(0,0,0,.14),
+    0 20px 48px rgba(0,0,0,.18);
 }
 
 .canvasMeta {
