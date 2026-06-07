@@ -197,7 +197,15 @@ export default function Studio() {
   const [chatWidth, setChatWidth]   = useState(null)
   const [hasContent, setHasContent] = useState(false)
   const [canvasOpen, setCanvasOpen] = useState(false)
-  const [generatedAds, setGeneratedAds] = useState([])  // history of generated image URLs
+  const [generatedAds, setGeneratedAds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('studio_generated_ads')
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('studio_generated_ads', JSON.stringify(generatedAds)) } catch {}
+  }, [generatedAds])
 
   const canvasContainerRef = useRef(null)
   const canvasAreaRef       = useRef(null)  // measures available space
@@ -220,21 +228,42 @@ export default function Studio() {
     return "Hi! Describe the mobile ad you want to create. Pick a reference image if you have one, and I'll craft a detailed prompt for AI generation."
   }, [dna, dnaComplete])
 
-  const [messages, setMessages] = useState(() => [
-    { role: 'assistant', content: '' }, // filled by effect below
-  ])
+  // Load persisted chat from localStorage, or use welcome message
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem('studio_messages')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return [{ role: 'assistant', content: '' }]
+  })
 
+  // Seed welcome message only when chat is brand-new (single empty assistant bubble)
   useEffect(() => {
-    setMessages([{ role: 'assistant', content: welcomeMessage }])
+    if (messages.length === 1 && messages[0].content === '') {
+      setMessages([{ role: 'assistant', content: welcomeMessage }])
+    }
   }, [welcomeMessage])
-  const [input, setInput]           = useState('')
+
+  // Persist messages to localStorage on every change
+  useEffect(() => {
+    try { localStorage.setItem('studio_messages', JSON.stringify(messages)) } catch {}
+  }, [messages])
+
+  const [input, setInput]             = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [genLoading, setGenLoading]   = useState(false)
-  const [lastPrompt, setLastPrompt]   = useState('')
+
+  const [lastPrompt, setLastPrompt] = useState(() => {
+    try { return localStorage.getItem('studio_last_prompt') || '' } catch { return '' }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('studio_last_prompt', lastPrompt) } catch {}
+  }, [lastPrompt])
+
   const messagesEndRef = useRef(null)
 
-  const [refImage, setRefImage]             = useState(null)
-  const [showRefPicker, setShowRefPicker]   = useState(false)
+  const [refImage, setRefImage]           = useState(null)
+  const [showRefPicker, setShowRefPicker] = useState(false)
 
   /* ── Drag resize ── */
   const dragging    = useRef(false)
@@ -468,6 +497,23 @@ export default function Studio() {
 
           {/* Messages */}
           <div className={styles.chatMessages}>
+            {/* Clear chat button — only shown when there are user messages */}
+            {messages.some(m => m.role === 'user') && (
+              <div className={styles.clearChatRow}>
+                <button
+                  className={styles.clearChatBtn}
+                  onClick={() => {
+                    const fresh = [{ role: 'assistant', content: welcomeMessage }]
+                    setMessages(fresh)
+                    setLastPrompt('')
+                    localStorage.removeItem('studio_messages')
+                    localStorage.removeItem('studio_last_prompt')
+                  }}
+                >
+                  Clear chat
+                </button>
+              </div>
+            )}
             {messages.map((m, i) => (
               <div key={i} className={`${styles.chatMsg} ${m.role === 'user' ? styles.chatMsgUser : styles.chatMsgAI}`}>
                 {m.role === 'assistant' && <div className={styles.chatAvatar}><Sparkles size={11} /></div>}

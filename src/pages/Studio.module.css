@@ -222,6 +222,16 @@
 }
 .chatMsg { display: flex; gap: 7px; align-items: flex-start; }
 .chatMsgUser { flex-direction: row-reverse; }
+/* Clear chat */
+.clearChatRow { display: flex; justify-content: center; margin-bottom: 4px; }
+.clearChatBtn {
+  font-size: 11px; color: var(--gray-400);
+  padding: 3px 10px; border-radius: 99px;
+  border: 1px solid var(--border); background: transparent;
+  transition: color .12s, border-color .12s;
+}
+.clearChatBtn:hover { color: var(--red); border-color: #fecaca; }
+
 .chatAvatar {
   width: 22px; height: 22px; border-radius: 50%;
   background: linear-gradient(135deg, var(--orange-400), var(--orange-600));
