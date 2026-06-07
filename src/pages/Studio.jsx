@@ -37,58 +37,34 @@ async function* mockStream(text, delay = 18) {
   }
 }
 
-/* ── Convert image URL / blob URL → base64 data URI ── */
-async function toBase64(url) {
-  const res = await fetch(url)
-  const blob = await res.blob()
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onloadend = () => resolve(reader.result)
-    reader.onerror = reject
-    reader.readAsDataURL(blob)
-  })
-}
-
 /* ── DeepSeek streaming ── */
-async function* streamDeepSeek(messages, dna, imageBase64 = null) {
+async function* streamDeepSeek(messages, dna) {
   const key = import.meta.env.VITE_DEEPSEEK_API_KEY
   const last = messages.at(-1)?.content || 'creative ad'
 
   if (!key || key === 'your_deepseek_key_here') {
-    const mock = `On it. Here's your generation prompt:\n\n<prompt>Professional mobile ad, ${last}, bold typography, vibrant colors, clean layout, photorealistic, dramatic lighting, 9:16 vertical format</prompt>`
+    const mock = `On it! Here's your generation prompt:\n\n<prompt>Professional mobile advertisement, ${last}, bold typography "Build Smarter", vibrant colors #1a1a2e and #f97316, cinematic lighting, photorealistic, 8K quality, agency-quality ad layout, 9:16 vertical format</prompt>`
     yield* mockStream(mock)
     return
   }
 
   const sys = `You are a world-class ad creative director and Flux AI prompt engineer. Reply in max 2 sentences, then output the image prompt.
 ${dna?.brandName ? `Brand: ${dna.brandName}.` : ''}${dna?.industry ? ` Industry: ${dna.industry}.` : ''}${dna?.toneOfVoice ? ` Tone: ${dna.toneOfVoice}.` : ''}${dna?.usp ? ` USP: ${dna.usp}.` : ''}
-${imageBase64 ? 'Reference image provided — match its visual style, color palette and layout composition closely.' : ''}
+If the user mentions a reference image, incorporate its described style, colors and composition into the prompt.
 
-The <prompt> must produce a STUNNING, ultra-professional advertisement image. Follow these rules strictly:
+The <prompt> must produce a STUNNING, ultra-professional advertisement image. Rules:
 - Photorealistic, cinematic lighting, 8K quality, sharp focus
-- Bold clean typography — use ONLY 2-4 words max per text element so AI renders them correctly (e.g. "Build Smarter", "Future Ready"). Never long sentences.
+- Bold clean typography — ONLY 2-4 words per text element (e.g. "Build Smarter", "Future Ready") — never long sentences
 - Strong color contrast — specify exact hex colors matching the brand
 - Professional ad layout: dramatic hero visual, bold headline, brief tagline, CTA button
 - Specify fonts: bold sans-serif (e.g. "Helvetica Neue Bold", "Inter Black")
 - Cinematic depth, professional color grading
-- NO lorem ipsum, NO random gibberish text — only short crisp phrases
+- NO lorem ipsum, NO random gibberish text
 - Style: premium editorial advertising photography, agency-quality
 
 Output ONLY <prompt>…</prompt> with nothing before or after it.`
 
-  // Build the last user message — include image if present
-  const builtMessages = messages.map((m, i) => {
-    if (imageBase64 && m.role === 'user' && i === messages.length - 1) {
-      return {
-        role: 'user',
-        content: [
-          { type: 'text', text: m.content },
-          { type: 'image_url', image_url: { url: imageBase64 } },
-        ],
-      }
-    }
-    return m
-  })
+  const builtMessages = messages
 
   const res = await fetch('/api/chat', {
     method: 'POST',
@@ -415,21 +391,22 @@ export default function Studio() {
     e?.preventDefault()
     const text = input.trim(); if (!text || chatLoading) return
 
-    // Convert reference image to base64 so DeepSeek can read it
-    let imageBase64 = null
-    if (refImage?.url) {
-      try { imageBase64 = await toBase64(refImage.url) } catch {}
-    }
+    // deepseek-chat is text-only — append reference image context as text
+    const refNote = refImage
+      ? `\n\n[Reference image attached: "${refImage.name}". Match its visual style, color palette, composition and mood closely in the generated ad.]`
+      : ''
 
-    const next = [...messages, { role: 'user', content: text }]
-    setMessages([...next, { role: 'assistant', content: '' }])
+    const userMessage = { role: 'user', content: text + refNote }
+    const next = [...messages, userMessage]
+    // Show message in UI without the technical note
+    setMessages([...messages, { role: 'user', content: text }, { role: 'assistant', content: '' }])
     setInput('')
     setChatLoading(true)
     let full = ''
     let promptStarted = false
 
     try {
-      for await (const chunk of streamDeepSeek(next, dna, imageBase64)) {
+      for await (const chunk of streamDeepSeek(next, dna)) {
         full += chunk
 
         // Once <prompt> tag starts, stop updating the visible bubble
