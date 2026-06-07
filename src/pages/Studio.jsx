@@ -328,6 +328,26 @@ export default function Studio() {
   const [refImage, setRefImage]           = useState(null)
   const [showRefPicker, setShowRefPicker] = useState(false)
   const [selectedStyle, setSelectedStyle] = useState(null)
+  const [useDNA, setUseDNA]               = useState(true)
+
+  /* ── Pre-made suggestions based on brand DNA ── */
+  const suggestions = useMemo(() => {
+    if (dna?.brandName && dnaComplete) {
+      return [
+        dna.usp           && `Create a ${format.label} ad highlighting "${dna.usp.slice(0, 55)}"`,
+        dna.targetAudience && `Design an ad targeting ${dna.targetAudience.slice(0, 45)}`,
+        dna.industry       && `Bold ${dna.industry} promotional ad for ${dna.brandName} with strong CTA`,
+        dna.toneOfVoice    && `${dna.toneOfVoice} ${format.label} ad showcasing ${dna.brandName}'s services`,
+        `Vibrant ${format.label} ad for ${dna.brandName} — show a product/service demo scene`,
+      ].filter(Boolean).slice(0, 4)
+    }
+    return [
+      `Vibrant ${format.label} ad for a web developer with glowing code scene`,
+      `Bold tech startup ${format.label} ad with neon colors and strong CTA`,
+      `Professional ${format.label} ad showing a laptop with website mockup`,
+      `Eye-catching ${format.label} ad with dark gradient and bold headline`,
+    ]
+  }, [dna, dnaComplete, format.label])
 
   /* ── Drag resize ── */
   const dragging    = useRef(false)
@@ -514,6 +534,7 @@ export default function Studio() {
 
     const userMessage = { role: 'user', content: text + refNote + styleNote }
     const next = [...messages, userMessage]
+    const activeDNA = useDNA ? dna : null
     // Show in UI — image attached to message bubble, cleared from input
     const sentImage = refImage ? { url: refImage.url, name: refImage.name } : null
     setMessages([...messages, { role: 'user', content: text, image: sentImage }, { role: 'assistant', content: '' }])
@@ -524,7 +545,7 @@ export default function Studio() {
     let promptStarted = false
 
     try {
-      for await (const chunk of streamDeepSeek(next, dna)) {
+      for await (const chunk of streamDeepSeek(next, activeDNA)) {
         full += chunk
 
         // Stop streaming to bubble once the prompt starts (any format)
@@ -727,7 +748,7 @@ export default function Studio() {
                 </button>
               </div>
 
-              {/* Row 2 — Style presets */}
+              {/* Row 2 — Style presets + DNA toggle */}
               <div className={styles.styleRow}>
                 {AD_STYLES.map(s => (
                   <button
@@ -740,7 +761,35 @@ export default function Studio() {
                     <span>{s.icon}</span>{s.label}
                   </button>
                 ))}
+                <div className={styles.styleRowDivider} />
+                {/* DNA toggle */}
+                <button
+                  type="button"
+                  className={`${styles.dnaToggle} ${useDNA && dnaComplete ? styles.dnaToggleOn : ''}`}
+                  onClick={() => setUseDNA(v => !v)}
+                  title={dnaComplete ? `Brand DNA: ${useDNA ? 'ON' : 'OFF'}` : 'Set up Brand DNA first'}
+                  disabled={!dnaComplete}
+                >
+                  <span className={styles.dnaToggleDot} />
+                  {dnaComplete ? (useDNA ? `🧬 ${dna.brandName || 'DNA'}` : '🧬 DNA off') : '🧬 No DNA'}
+                </button>
               </div>
+
+              {/* Suggestion chips — when input is empty */}
+              {!input && (
+                <div className={styles.suggestRow}>
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={styles.suggestChip}
+                      onClick={() => setInput(s)}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Row 3 — Reference image (shown when selected) */}
               {refImage && (
