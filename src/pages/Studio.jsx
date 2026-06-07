@@ -48,21 +48,33 @@ async function* streamDeepSeek(messages, dna) {
     return
   }
 
-  const sys = `You are a world-class ad creative director and Flux AI prompt engineer. Reply in max 2 sentences, then output the image prompt.
-${dna?.brandName ? `Brand: ${dna.brandName}.` : ''}${dna?.industry ? ` Industry: ${dna.industry}.` : ''}${dna?.toneOfVoice ? ` Tone: ${dna.toneOfVoice}.` : ''}${dna?.usp ? ` USP: ${dna.usp}.` : ''}
-If the user mentions a reference image, incorporate its described style, colors and composition into the prompt.
+  const sys = `You are an AI ad creative director integrated into AdStudio — a platform that sends your prompts directly to Kie AI (Flux) for image generation. You DO generate images — via the prompt you write.
 
-The <prompt> must produce a STUNNING, ultra-professional advertisement image. Rules:
-- Photorealistic, cinematic lighting, 8K quality, sharp focus
-- Bold clean typography — ONLY 2-4 words per text element (e.g. "Build Smarter", "Future Ready") — never long sentences
-- Strong color contrast — specify exact hex colors matching the brand
-- Professional ad layout: dramatic hero visual, bold headline, brief tagline, CTA button
-- Specify fonts: bold sans-serif (e.g. "Helvetica Neue Bold", "Inter Black")
-- Cinematic depth, professional color grading
-- NO lorem ipsum, NO random gibberish text
-- Style: premium editorial advertising photography, agency-quality
+BRAND CONTEXT:
+${dna?.brandName ? `Brand: ${dna.brandName}` : 'Brand: not set'}${dna?.industry ? ` | Industry: ${dna.industry}` : ''}${dna?.toneOfVoice ? ` | Tone: ${dna.toneOfVoice}` : ''}${dna?.usp ? ` | USP: ${dna.usp}` : ''}
 
-Output ONLY <prompt>…</prompt> with nothing before or after it.`
+YOUR RESPONSE FORMAT — MANDATORY, NO EXCEPTIONS:
+1. One sentence acknowledging the request (max 15 words)
+2. Immediately follow with the XML tag: <prompt>YOUR IMAGE PROMPT HERE</prompt>
+
+CRITICAL RULES:
+- ALWAYS use <prompt> and </prompt> tags — this is how the image is generated
+- NEVER say "I can't generate images" — you CAN, through the prompt tags
+- NEVER use **Prompt:** or any other label — only the XML tags
+- NEVER skip the tags no matter what the user says
+
+PROMPT QUALITY RULES (inside the tags):
+- Photorealistic, cinematic, 8K, sharp focus
+- Typography: ONLY 2-4 words per text element — short phrases only (e.g. "Build Smarter", "Scale Fast")
+- Exact hex colors for brand palette
+- Layout: hero image + bold headline + tagline + CTA button
+- Font: Inter Black, Helvetica Neue Bold, or similar bold sans-serif
+- NO long sentences in text overlays, NO lorem ipsum, NO gibberish
+- Style: premium editorial advertising photography, agency-quality, dramatic lighting
+
+EXAMPLE RESPONSE:
+Here's your professional ad.
+<prompt>Cinematic 8K mobile ad, dark tech office with glowing screens, bold headline "BUILD BETTER" in Inter Black white top-left, tagline "Websites · AI · Apps" gray below, CTA button "Get Started" blue gradient, deep blue #1A73E8 and charcoal #1E1E2F palette, lens flare, editorial advertising style, ultra sharp</prompt>`
 
   const builtMessages = messages
 
@@ -409,31 +421,45 @@ export default function Studio() {
       for await (const chunk of streamDeepSeek(next, dna)) {
         full += chunk
 
-        // Once <prompt> tag starts, stop updating the visible bubble
+        // Stop streaming to bubble once the prompt starts (any format)
         if (!promptStarted) {
-          const cutoff = full.indexOf('<prompt>')
-          if (cutoff === -1) {
-            // Still in commentary — stream it normally
+          const cutoffs = [
+            full.indexOf('<prompt>'),
+            full.search(/\*\*Prompt:\*\*/i),
+            full.search(/\n\nPrompt:/i),
+          ].filter(i => i !== -1)
+
+          if (cutoffs.length === 0) {
+            // Still in commentary — stream normally
             setMessages(m => {
               const copy = [...m]
               copy[copy.length - 1] = { role: 'assistant', content: full }
               return copy
             })
           } else {
-            // <prompt> has started — freeze bubble at the commentary part
+            // Prompt section started — freeze bubble at commentary
             promptStarted = true
+            const cutoff = Math.min(...cutoffs)
             const visible = full.slice(0, cutoff).trim()
             setMessages(m => {
               const copy = [...m]
-              copy[copy.length - 1] = { role: 'assistant', content: visible }
+              copy[copy.length - 1] = { role: 'assistant', content: visible || 'On it!' }
               return copy
             })
           }
         }
       }
 
+      // Primary: extract from <prompt> tags
       const match = full.match(/<prompt>([\s\S]*?)<\/prompt>/)
-      if (match) setLastPrompt(match[1].trim())
+      if (match) {
+        setLastPrompt(match[1].trim())
+      } else {
+        // Fallback: extract text after **Prompt:** label (AI sometimes ignores tags)
+        const fallback = full.match(/\*\*Prompt:\*\*\s*([\s\S]+)/i)
+          || full.match(/Prompt:\s*([\s\S]+)/i)
+        if (fallback) setLastPrompt(fallback[1].trim())
+      }
     } catch (err) {
       setMessages(m => {
         const copy = [...m]
@@ -496,9 +522,13 @@ export default function Studio() {
                 {m.role === 'assistant' && <div className={styles.chatAvatar}><Sparkles size={11} /></div>}
                 <div className={styles.chatBubble}>
                   {m.content
-                    .replace(/<prompt>[\s\S]*?<\/prompt>/g, '')
+                    .replace(/<prompt>[\s\S]*?<\/prompt>/g, '')  // strip <prompt> blocks
+                    .replace(/\*\*Prompt:\*\*[\s\S]*/i, '')       // strip **Prompt:** fallback
+                    .replace(/^Prompt:\s*/im, '')                  // strip bare "Prompt:" label
+                    .replace(/\*\*/g, '')                          // strip markdown bold
                     .trimEnd()
                     .split('\n')
+                    .filter(line => line.trim())                   // remove blank lines
                     .map((line, j, arr) => (
                       <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
                     ))
