@@ -453,71 +453,6 @@ export default function Studio() {
         {/* Chat panel — 50% default, draggable */}
         <div className={styles.chatPanel} style={chatWidth ? { width: chatWidth } : {}}>
 
-          {/* Chat header — format selector + canvas toggle */}
-          <div className={styles.chatHeader}>
-            <div className={styles.formatPills}>
-              {FORMATS.map(f => (
-                <button
-                  key={f.id}
-                  className={`${styles.formatPill} ${format.id === f.id ? styles.formatPillActive : ''}`}
-                  onClick={() => { setFormat(f); setHasContent(false) }}
-                  title={f.platform}
-                >
-                  {f.mobile ? <Smartphone size={11} /> : <Monitor size={11} />}
-                  <span>{f.label}</span>
-                  <span className={styles.formatPillRatio}>{f.ratio}</span>
-                </button>
-              ))}
-            </div>
-            <button
-              className={`${styles.canvasToggle} ${canvasOpen ? styles.canvasToggleOn : ''}`}
-              onClick={() => setCanvasOpen(v => !v)}
-              title={canvasOpen ? 'Hide canvas' : 'Show canvas'}
-            >
-              {canvasOpen ? <PanelRightClose size={14} /> : <PanelRight size={14} />}
-            </button>
-          </div>
-
-          {/* Reference image */}
-          <div className={styles.refSection}>
-            <div className={styles.refHeader}>
-              <span className={styles.panelLabel}>Reference Image</span>
-              {refImage && <button className={styles.clearRef} onClick={() => setRefImage(null)}><X size={12} /> Remove</button>}
-            </div>
-
-            {refImage ? (
-              <div className={styles.refPreview}>
-                <img src={refImage.url} alt="reference" />
-                <span className={styles.refName}>{refImage.name}</span>
-              </div>
-            ) : (
-              <div className={styles.refPicker}>
-                <button className={styles.refPickerBtn} onClick={() => setShowRefPicker(v => !v)}>
-                  <ImageIcon size={13} /> Pick from library
-                </button>
-                <span className={styles.refOr}>or</span>
-                <div {...getRootProps()} className={`${styles.refDrop} ${isDragActive ? styles.refDropActive : ''}`}>
-                  <input {...getInputProps()} />
-                  <Upload size={13} /> <span>Drop</span>
-                </div>
-              </div>
-            )}
-
-            {showRefPicker && (
-              <div className={styles.libPicker}>
-                <div className={styles.libPickerGrid}>
-                  {ads.map(ad => (
-                    <button key={ad.id} className={styles.libPickerItem}
-                      onClick={() => { setRefImage({ url: ad.thumbnail, name: ad.title }); setShowRefPicker(false) }}>
-                      <img src={ad.thumbnail} alt={ad.title} />
-                      <span>{ad.title}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Messages */}
           <div className={styles.chatMessages}>
             {messages.map((m, i) => (
@@ -575,32 +510,114 @@ export default function Studio() {
           )}
 
           <div className={styles.chatInputWrap}>
-            <form className={styles.chatInput} onSubmit={sendMessage}>
-              <textarea
-                className={styles.chatTextarea}
-                placeholder={`Describe your ${format.label} ad…`}
-                value={input}
-                rows={1}
-                onChange={e => {
-                  setInput(e.target.value)
-                  e.target.style.height = 'auto'
-                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
-                }}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-              />
-              <div className={styles.chatActions}>
-                <button type="button" className={styles.quickGenBtn}
-                  onClick={() => generateImage(input)} disabled={!input.trim() || genLoading}
-                  title="Generate image directly">
-                  {genLoading ? <RefreshCw size={13} className={styles.spin} /> : <Wand2 size={13} />}
-                </button>
-                <button type="submit" className={styles.sendBtn} disabled={!input.trim() || chatLoading} title="Refine with AI first">
-                  <Send size={13} />
+            <div className={styles.inputBox}>
+
+              {/* Row 1 — Format pills */}
+              <div className={styles.inputFormatRow}>
+                {FORMATS.map(f => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className={`${styles.inputFormatPill} ${format.id === f.id ? styles.inputFormatPillActive : ''}`}
+                    onClick={() => { setFormat(f); setHasContent(false) }}
+                    title={f.platform}
+                  >
+                    {f.mobile ? <Smartphone size={10} /> : <Monitor size={10} />}
+                    {f.label}
+                    <span className={styles.inputFormatRatio}>{f.ratio}</span>
+                  </button>
+                ))}
+                <div className={styles.inputFormatDivider} />
+                {/* Canvas toggle */}
+                <button
+                  type="button"
+                  className={`${styles.inputCanvasBtn} ${canvasOpen ? styles.inputCanvasBtnOn : ''}`}
+                  onClick={() => setCanvasOpen(v => !v)}
+                  title={canvasOpen ? 'Hide canvas' : 'Show canvas'}
+                >
+                  {canvasOpen ? <PanelRightClose size={12} /> : <PanelRight size={12} />}
+                  {canvasOpen ? 'Hide' : 'Canvas'}
                 </button>
               </div>
-            </form>
+
+              {/* Row 2 — Reference image (shown when selected) */}
+              {refImage && (
+                <div className={styles.inputRefRow}>
+                  <img src={refImage.url} alt="reference" className={styles.inputRefThumb} />
+                  <span className={styles.inputRefName}>{refImage.name}</span>
+                  <button type="button" className={styles.inputRefRemove} onClick={() => setRefImage(null)}>
+                    <X size={11} />
+                  </button>
+                </div>
+              )}
+
+              {/* Row 3 — Textarea + actions */}
+              <form className={styles.inputRow} onSubmit={sendMessage}>
+                <textarea
+                  className={styles.chatTextarea}
+                  placeholder={`Describe your ${format.label} ad…`}
+                  value={input}
+                  rows={1}
+                  onChange={e => {
+                    setInput(e.target.value)
+                    e.target.style.height = 'auto'
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+                  }}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+                />
+                <div className={styles.inputActions}>
+                  {/* Library picker */}
+                  <div className={styles.inputAttachWrap}>
+                    <button
+                      type="button"
+                      className={`${styles.inputAttachBtn} ${showRefPicker ? styles.inputAttachBtnOn : ''}`}
+                      onClick={() => setShowRefPicker(v => !v)}
+                      title="Add reference image"
+                    >
+                      <ImageIcon size={14} />
+                    </button>
+                    {showRefPicker && (
+                      <div className={styles.libPicker}>
+                        <div className={styles.libPickerActions}>
+                          <div {...getRootProps()} className={`${styles.libUploadZone} ${isDragActive ? styles.libUploadActive : ''}`}>
+                            <input {...getInputProps()} />
+                            <Upload size={13} />
+                            <span>Upload image</span>
+                          </div>
+                        </div>
+                        {ads.length > 0 && (
+                          <>
+                            <p className={styles.libPickerLabel}>From library</p>
+                            <div className={styles.libPickerGrid}>
+                              {ads.map(ad => (
+                                <button key={ad.id} className={styles.libPickerItem}
+                                  onClick={() => { setRefImage({ url: ad.thumbnail, name: ad.title }); setShowRefPicker(false) }}>
+                                  <img src={ad.thumbnail} alt={ad.title} />
+                                  <span>{ad.title}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <button type="button" className={styles.quickGenBtn}
+                    onClick={() => generateImage(input)} disabled={!input.trim() || genLoading}
+                    title="Generate directly">
+                    {genLoading ? <RefreshCw size={13} className={styles.spin} /> : <Wand2 size={13} />}
+                  </button>
+                  <button type="submit" className={styles.sendBtn}
+                    disabled={!input.trim() || chatLoading} title="Chat with AI">
+                    <Send size={13} />
+                  </button>
+                </div>
+              </form>
+            </div>
+
             <p className={styles.inputHint}>
-              <kbd>Enter</kbd> to chat · <kbd>⌘↵</kbd> or <Wand2 size={10} style={{display:'inline', verticalAlign:'middle'}} /> to generate
+              <kbd>Enter</kbd> to chat &nbsp;·&nbsp; <kbd>⌘↵</kbd> or wand to generate directly
             </p>
           </div>
         </div>

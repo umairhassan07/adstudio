@@ -7,56 +7,138 @@
   background: var(--bg-app);
 }
 
-/* ── Chat header — format pills + canvas toggle ── */
-.chatHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  background: var(--bg-surface);
-}
-.formatPills {
-  display: flex; align-items: center; gap: 4px;
-  flex-wrap: wrap;
-}
-.formatPill {
-  display: flex; align-items: center; gap: 4px;
-  padding: 5px 10px;
-  border-radius: 99px;
-  font-size: 12px; font-weight: 500;
-  color: var(--text-muted);
+/* ── Input box — unified container ── */
+.inputBox {
   border: 1.5px solid var(--border);
-  background: var(--bg-surface);
-  transition: background .12s, color .12s, border-color .12s;
-  white-space: nowrap; cursor: pointer;
+  border-radius: 16px;
+  background: var(--gray-50);
+  overflow: visible;
+  transition: border-color .15s, box-shadow .15s;
 }
-.formatPill:hover { background: var(--gray-50); color: var(--text-primary); border-color: var(--gray-300); }
-.formatPillActive {
-  background: var(--orange-500);
-  color: white;
-  border-color: var(--orange-500);
-  font-weight: 600;
-}
-.formatPillActive svg { opacity: .85; }
-.formatPillRatio {
-  font-size: 9.5px; opacity: .7; font-weight: 400;
+.inputBox:focus-within {
+  border-color: var(--orange-400);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(249,115,22,.08);
 }
 
-.canvasToggle {
-  display: flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px;
-  border-radius: 8px;
+/* Format pills row */
+.inputFormatRow {
+  display: flex; align-items: center; gap: 4px;
+  padding: 8px 10px 6px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.inputFormatPill {
+  display: flex; align-items: center; gap: 3px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11.5px; font-weight: 500;
   color: var(--text-muted);
   border: 1.5px solid var(--border);
-  background: var(--bg-surface);
-  transition: all .12s; flex-shrink: 0;
+  background: white;
+  transition: all .12s; white-space: nowrap; cursor: pointer;
 }
-.canvasToggle:hover { border-color: var(--gray-300); color: var(--text-primary); }
-.canvasToggleOn { background: var(--gray-900); color: white; border-color: var(--gray-900); }
-.canvasToggleOn:hover { background: var(--gray-800); }
+.inputFormatPill:hover { border-color: var(--orange-300); color: var(--orange-600); background: var(--orange-50); }
+.inputFormatPillActive {
+  background: var(--orange-500); color: white;
+  border-color: var(--orange-500); font-weight: 600;
+}
+.inputFormatRatio { font-size: 9px; opacity: .75; font-weight: 400; }
+.inputFormatDivider { width: 1px; height: 16px; background: var(--border); margin: 0 2px; flex-shrink: 0; }
+.inputCanvasBtn {
+  display: flex; align-items: center; gap: 3px;
+  padding: 3px 9px; border-radius: 99px;
+  font-size: 11.5px; font-weight: 500;
+  color: var(--text-muted);
+  border: 1.5px solid var(--border); background: white;
+  transition: all .12s; white-space: nowrap; cursor: pointer;
+}
+.inputCanvasBtn:hover { border-color: var(--gray-400); color: var(--text-primary); }
+.inputCanvasBtnOn { background: var(--gray-900); color: white; border-color: var(--gray-900); }
+.inputCanvasBtnOn:hover { background: var(--gray-800); }
+
+/* Reference image row */
+.inputRefRow {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--orange-50);
+}
+.inputRefThumb {
+  width: 32px; height: 32px; border-radius: 6px;
+  object-fit: cover; flex-shrink: 0;
+  border: 1px solid var(--orange-200);
+}
+.inputRefName {
+  flex: 1; font-size: 12px; color: var(--orange-700);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.inputRefRemove {
+  display: flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  color: var(--orange-400); background: var(--orange-100);
+  transition: background .12s; flex-shrink: 0;
+}
+.inputRefRemove:hover { background: var(--orange-200); }
+
+/* Textarea + actions row */
+.inputRow {
+  display: flex; align-items: flex-end;
+  padding: 8px 8px 8px 14px; gap: 6px;
+}
+.inputActions {
+  display: flex; align-items: flex-end; gap: 4px; flex-shrink: 0;
+  position: relative;
+}
+
+/* Attach (image picker) button */
+.inputAttachWrap { position: relative; }
+.inputAttachBtn {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 10px;
+  color: var(--text-muted); border: 1.5px solid var(--border);
+  background: transparent; transition: all .12s;
+}
+.inputAttachBtn:hover { border-color: var(--orange-300); color: var(--orange-500); background: var(--orange-50); }
+.inputAttachBtnOn { background: var(--orange-50); border-color: var(--orange-400); color: var(--orange-500); }
+
+/* Library picker dropdown */
+.libPicker {
+  position: absolute; bottom: calc(100% + 8px); right: 0;
+  width: 260px;
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+  z-index: 50; padding: 10px; max-height: 320px; overflow-y: auto;
+}
+.libPickerActions { margin-bottom: 8px; }
+.libUploadZone {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 8px;
+  border: 1.5px dashed var(--gray-200);
+  background: var(--gray-50); cursor: pointer;
+  font-size: 12.5px; color: var(--text-secondary);
+  transition: border-color .12s, background .12s;
+}
+.libUploadZone:hover, .libUploadActive {
+  border-color: var(--orange-400); background: var(--orange-50); color: var(--orange-600);
+}
+.libPickerLabel {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; color: var(--gray-400); margin: 8px 0 6px;
+}
+.libPickerGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.libPickerItem {
+  display: flex; flex-direction: column;
+  border-radius: 6px; overflow: hidden;
+  border: 1.5px solid var(--border); cursor: pointer; text-align: left;
+  transition: border-color .12s;
+}
+.libPickerItem:hover { border-color: var(--orange-400); }
+.libPickerItem img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+.libPickerItem span {
+  font-size: 11px; color: var(--text-secondary);
+  padding: 3px 6px 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
 /* ── Workspace ── */
 .workspace {
@@ -79,13 +161,12 @@
   max-width: 100%;
 }
 
-/* When canvas is closed, center the chat content with max-width */
-.chatPanel > .chatMessages,
-.chatPanel > .refSection,
-.chatPanel > .promptReady,
-.chatPanel > .genHistory,
-.chatPanel > .chatInputWrap {
-  max-width: 680px;
+/* Center chat content with max-width */
+.chatMessages,
+.promptReady,
+.genHistory,
+.chatInputWrap {
+  max-width: 700px;
   margin-left: auto;
   margin-right: auto;
   width: 100%;
@@ -114,66 +195,11 @@
 .resizeHandle:hover::after { background: var(--orange-400); }
 
 /* ── Reference image ── */
-.refSection {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  position: relative;
-}
-.refHeader {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 8px;
-}
 .panelLabel {
   font-size: 10px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .9px;
   color: var(--gray-400);
 }
-.clearRef {
-  display: flex; align-items: center; gap: 3px;
-  font-size: 11px; color: var(--text-muted);
-  transition: color .12s;
-}
-.clearRef:hover { color: var(--red); }
-
-.refPreview { display: flex; align-items: center; gap: 8px; }
-.refPreview img {
-  width: 56px; height: 38px;
-  border-radius: 5px; object-fit: cover;
-  border: 1px solid var(--border); flex-shrink: 0;
-}
-.refName {
-  font-size: 12px; color: var(--text-secondary);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-.refPicker { display: flex; align-items: center; gap: 8px; }
-.refPickerBtn {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 11px;
-  border-radius: 6px; font-size: 12px; font-weight: 500;
-  color: var(--text-secondary);
-  background: var(--gray-50); border: 1.5px solid var(--border);
-  transition: all .12s; white-space: nowrap;
-}
-.refPickerBtn:hover { border-color: var(--orange-300); color: var(--orange-600); background: var(--orange-50); }
-.refOr { font-size: 11px; color: var(--gray-300); }
-.refDrop {
-  display: flex; align-items: center; gap: 5px;
-  padding: 6px 10px; border-radius: 6px;
-  font-size: 12px; color: var(--text-muted);
-  border: 1.5px dashed var(--gray-200); cursor: pointer;
-  transition: border-color .12s, background .12s; white-space: nowrap;
-}
-.refDrop:hover, .refDropActive { border-color: var(--orange-400); background: var(--orange-50); color: var(--orange-600); }
-
-.libPicker {
-  position: absolute; top: calc(100% - 4px); left: 0; right: 0;
-  background: var(--bg-surface); border: 1px solid var(--border);
-  border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
-  z-index: 50; max-height: 260px; overflow-y: auto; padding: 8px;
-}
-.libPickerGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .libPickerItem {
   display: flex; flex-direction: column; gap: 0;
   border-radius: 6px; overflow: hidden;
@@ -289,6 +315,7 @@
   padding: 12px 16px 14px;
   border-top: 1px solid var(--border);
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 /* ── Chat input — pill style, professional ── */
