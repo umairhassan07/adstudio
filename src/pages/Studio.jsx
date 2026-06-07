@@ -52,10 +52,16 @@ const AD_STYLES = [
   },
 ]
 
-/* Compute canvas display size to fill ~80% of container */
+/* Canvas fills the entire container — image scales inside it */
 function calcDisplay(aspect, containerW, containerH) {
-  const maxH = Math.floor(containerH * 0.82)
-  const maxW = Math.floor(containerW * 0.82)
+  return { w: Math.max(containerW, 100), h: Math.max(containerH, 100), aspect }
+}
+
+/* Compute how large the image should appear within the full canvas */
+function calcImageDisplay(aspect, canvasW, canvasH) {
+  const pad = 0.78
+  const maxH = Math.floor(canvasH * pad)
+  const maxW = Math.floor(canvasW * pad)
   let h = maxH
   let w = Math.floor(h * aspect)
   if (w > maxW) { w = maxW; h = Math.floor(w / aspect) }
@@ -422,11 +428,12 @@ export default function Studio() {
     const canvas = fabricRef.current
     if (!canvas || !fabricLib) return
     fabricLib.Image.fromURL(url, img => {
-      const { w, h } = displayRef.current
-      // Cover scaling — fills entire canvas, no white bars
-      const scale = Math.max(w / img.width, h / img.height)
+      const { w: cw, h: ch } = displayRef.current
+      // Scale image to ~78% of canvas while maintaining format aspect ratio
+      const { w: iw, h: ih } = calcImageDisplay(format.aspect, cw, ch)
+      const scale = Math.max(iw / img.width, ih / img.height)
       img.set({
-        left: w / 2, top: h / 2,
+        left: cw / 2, top: ch / 2,
         originX: 'center', originY: 'center',
         scaleX: scale, scaleY: scale,
         selectable: true,
