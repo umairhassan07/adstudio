@@ -7,13 +7,15 @@ export default function Dashboard() {
   const { ads, dna, dnaComplete, setActiveCanvasAd } = useApp()
   const navigate = useNavigate()
 
-  const totalClones = ads.reduce((s, a) => s + (a.clones || 0), 0)
+  const totalClones   = ads.reduce((s, a) => s + (a.clones || 0), 0)
+  const topCloned     = [...ads].sort((a, b) => (b.clones || 0) - (a.clones || 0))[0]
+  const platformCount = new Set(ads.map(a => a.platform).filter(Boolean)).size
 
   const stats = [
-    { label: 'Total Ads',    value: ads.length,      icon: Images,    color: '#3b82f6', bg: '#eff6ff' },
-    { label: 'Total Clones', value: totalClones,      icon: Copy,      color: '#f97316', bg: '#fff7ed' },
-    { label: 'Top Cloned',   value: '311',           icon: TrendingUp, color: '#22c55e', bg: '#f0fdf4' },
-    { label: 'Brand DNA',    value: dnaComplete ? 'Active' : 'Setup', icon: Dna, color: '#a855f7', bg: '#faf5ff' },
+    { label: 'Total Ads',      value: ads.length,                          icon: Images,    color: '#3b82f6', bg: '#eff6ff' },
+    { label: 'Total Clones',   value: totalClones,                          icon: Copy,      color: '#f97316', bg: '#fff7ed' },
+    { label: 'Platforms',      value: platformCount || '—',                 icon: TrendingUp, color: '#22c55e', bg: '#f0fdf4' },
+    { label: 'Brand DNA',      value: dnaComplete ? 'Active' : 'Setup',    icon: Dna,       color: '#a855f7', bg: '#faf5ff' },
   ]
 
   function openCanvas(ad) {
