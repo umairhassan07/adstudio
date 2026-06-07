@@ -366,7 +366,7 @@ export default function Studio() {
     return () => ro.disconnect()
   }, [format, canvasOpen, initCanvas])
 
-  function placeImage(url) {
+  function placeImage(url, addToHistory = true) {
     const canvas = fabricRef.current
     if (!canvas || !fabricLib) return
     fabricLib.Image.fromURL(url, img => {
@@ -388,12 +388,11 @@ export default function Studio() {
         borderScaleFactor: 1.5,
       })
       canvas.clear()
-      canvas.setBackgroundColor(null, () => {})
       canvas.add(img)
       canvas.setActiveObject(img)
       canvas.renderAll()
       setHasContent(true)
-      setGeneratedAds(prev => [{ url, format: format.label, id: Date.now() }, ...prev])
+      if (addToHistory) setGeneratedAds(prev => [{ url, format: format.label, id: Date.now() }, ...prev])
 
       addAd({
         title: `AI Ad — ${format.label}`,
@@ -533,32 +532,33 @@ export default function Studio() {
       <div className={styles.workspace}>
 
         {/* Chat panel — 50% default, draggable */}
-        <div className={styles.chatPanel} style={chatWidth ? { width: chatWidth } : {}}>
+        <div className={styles.chatPanel} style={canvasOpen && chatWidth ? { width: chatWidth } : {}}>
+
+          {/* Top bar — always visible, outside scroll */}
+          <div className={styles.chatTopBar}>
+            <button
+              className={styles.newChatBtn}
+              onClick={() => {
+                setMessages([{ role: 'assistant', content: welcomeMessage }])
+                setLastPrompt('')
+                setRefImage(null)
+                localStorage.removeItem('studio_messages')
+                localStorage.removeItem('studio_last_prompt')
+              }}
+            >
+              + New chat
+            </button>
+            <button
+              className={`${styles.previewToggleBtn} ${canvasOpen ? styles.previewToggleBtnOn : ''}`}
+              onClick={() => setCanvasOpen(v => !v)}
+            >
+              {canvasOpen ? <PanelRightClose size={12} /> : <PanelRight size={12} />}
+              {canvasOpen ? 'Hide preview' : 'Preview'}
+            </button>
+          </div>
 
           {/* Messages */}
           <div className={styles.chatMessages}>
-            {/* Clear chat button — only shown when there are user messages */}
-            <div className={styles.chatTopBar}>
-              <button
-                className={styles.newChatBtn}
-                onClick={() => {
-                  setMessages([{ role: 'assistant', content: welcomeMessage }])
-                  setLastPrompt('')
-                  setRefImage(null)
-                  localStorage.removeItem('studio_messages')
-                  localStorage.removeItem('studio_last_prompt')
-                }}
-              >
-                + New chat
-              </button>
-              <button
-                className={`${styles.previewToggleBtn} ${canvasOpen ? styles.previewToggleBtnOn : ''}`}
-                onClick={() => setCanvasOpen(v => !v)}
-              >
-                {canvasOpen ? <PanelRightClose size={12} /> : <PanelRight size={12} />}
-                {canvasOpen ? 'Hide preview' : 'Preview'}
-              </button>
-            </div>
             {messages.map((m, i) => (
               <div key={i} className={`${styles.chatMsg} ${m.role === 'user' ? styles.chatMsgUser : styles.chatMsgAI}`}>
                 {m.role === 'assistant' && <div className={styles.chatAvatar}><Sparkles size={11} /></div>}
@@ -599,22 +599,27 @@ export default function Studio() {
             </div>
           )}
 
-          {/* Input */}
           {/* Generated ads history */}
           {generatedAds.length > 0 && (
             <div className={styles.genHistory}>
               <p className={styles.genHistoryLabel}>Generated · click to view</p>
               <div className={styles.genHistoryRow}>
                 {generatedAds.map(item => (
-                  <button
-                    key={item.id}
-                    className={styles.genHistoryThumb}
-                    onClick={() => { setCanvasOpen(true); placeImage(item.url) }}
-                    title={`${item.format} — click to load`}
-                  >
-                    <img src={item.url} alt="generated ad" />
+                  <div key={item.id} className={styles.genHistoryThumb}>
+                    <img
+                      src={item.url} alt="generated ad"
+                      onClick={() => { setCanvasOpen(true); placeImage(item.url, false) }}
+                      title={`${item.format} — click to load`}
+                    />
                     <span className={styles.genHistoryFormat}>{item.format}</span>
-                  </button>
+                    <button
+                      className={styles.genHistoryDel}
+                      onClick={() => setGeneratedAds(prev => prev.filter(a => a.id !== item.id))}
+                      title="Remove"
+                    >
+                      <X size={8} />
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>

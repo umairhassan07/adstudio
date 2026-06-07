@@ -214,11 +214,13 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* ── Chat top bar ── */
+/* ── Chat top bar — fixed above scroll ── */
 .chatTopBar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 14px 4px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  background: var(--bg-surface);
 }
 .newChatBtn {
   font-size: 11.5px; font-weight: 500;
@@ -348,19 +350,31 @@
   border-radius: 6px; overflow: visible;
   border: 2px solid var(--border);
   background: var(--gray-50);
-  cursor: pointer; transition: border-color .12s;
+  transition: border-color .12s;
   padding: 0 0 4px;
+  position: relative;
 }
 .genHistoryThumb:hover { border-color: var(--orange-400); }
 .genHistoryThumb img {
   width: 100%; aspect-ratio: 1;
   object-fit: cover; border-radius: 4px 4px 0 0;
+  cursor: pointer;
 }
 .genHistoryFormat {
   font-size: 9px; font-weight: 600;
   color: var(--text-muted); text-transform: uppercase;
   letter-spacing: .4px; line-height: 1;
 }
+.genHistoryDel {
+  position: absolute; top: -5px; right: -5px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--gray-500); color: white;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .12s;
+  border: 1.5px solid white;
+}
+.genHistoryThumb:hover .genHistoryDel { opacity: 1; }
+.genHistoryDel:hover { background: var(--red) !important; }
 
 /* ── Chat input wrap ── */
 .chatInputWrap {
@@ -442,6 +456,10 @@
   background-size: 22px 22px;
   position: relative;
   min-width: 0;
+}
+/* Make Fabric's canvas elements transparent — no white box */
+.canvasArea :global(canvas) {
+  background: transparent !important;
 }
 .canvasScroll {
   flex: 1; overflow: auto;
