@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { sampleAds } from '../data/sampleAds'
 import { supabase, getSessionId } from '../lib/supabase'
 
 const AppContext = createContext(null)
@@ -24,8 +23,6 @@ export function AppProvider({ children }) {
   /* ── Load from Supabase on mount ── */
   useEffect(() => {
     if (!supabase) {
-      // No Supabase configured — fall back to sample data
-      setAds(sampleAds)
       setLoading(false)
       return
     }
@@ -51,12 +48,9 @@ export function AppProvider({ children }) {
           setDnaComplete(true)
         }
 
-        // Ads — show real ads if any, otherwise show sample ads so UI isn't empty
-        const realAds = adsRes.data || []
-        setAds(realAds.length ? realAds : sampleAds)
+        setAds(adsRes.data || [])
       } catch (err) {
         console.error('Supabase load error:', err)
-        setAds(sampleAds)
       } finally {
         setLoading(false)
       }
@@ -73,11 +67,7 @@ export function AppProvider({ children }) {
       clones: 0,
       created_at: new Date().toISOString(),
     }
-    // If we were showing sample ads, replace them with just the new real ad
-    setAds(prev => {
-      const isSample = prev.every(a => sampleAds.some(s => s.id === a.id))
-      return isSample ? [newAd] : [newAd, ...prev]
-    })
+    setAds(prev => [newAd, ...prev])
 
     if (supabase) {
       const { error } = await supabase.from('ads').insert({

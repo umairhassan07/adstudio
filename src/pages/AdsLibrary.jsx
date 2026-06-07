@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
-import { Search, Filter, Upload, Copy, ExternalLink, Grid3x3, List, X } from 'lucide-react'
+import { Search, Filter, Upload, Copy, Grid3x3, List, X, Wand2 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { platforms, categories } from '../data/sampleAds'
 import styles from './AdsLibrary.module.css'
@@ -15,9 +15,11 @@ export default function AdsLibrary() {
   const [view, setView] = useState('grid')
   const [showUpload, setShowUpload] = useState(false)
 
+  const hasFilters = !!(query || platform !== 'All' || category !== 'All')
+
   const filtered = ads.filter(ad => {
     const q = query.toLowerCase()
-    const matchQ = !q || ad.title.toLowerCase().includes(q) || ad.brand.toLowerCase().includes(q)
+    const matchQ = !q || ad.title?.toLowerCase().includes(q) || ad.brand?.toLowerCase().includes(q)
     const matchP = platform === 'All' || ad.platform === platform
     const matchC = category === 'All' || ad.category === category
     return matchQ && matchP && matchC
@@ -89,14 +91,14 @@ export default function AdsLibrary() {
           {filtered.map(ad => (
             <AdCard key={ad.id} ad={ad} onClone={() => openCanvas(ad)} />
           ))}
-          {filtered.length === 0 && <EmptyState />}
+          {filtered.length === 0 && <EmptyState hasFilters={hasFilters} onNavigate={navigate} />}
         </div>
       ) : (
         <div className={styles.listView}>
           {filtered.map(ad => (
             <AdRow key={ad.id} ad={ad} onClone={() => openCanvas(ad)} />
           ))}
-          {filtered.length === 0 && <EmptyState />}
+          {filtered.length === 0 && <EmptyState hasFilters={hasFilters} onNavigate={navigate} />}
         </div>
       )}
 
@@ -152,11 +154,30 @@ function AdRow({ ad, onClone }) {
 }
 
 /* ── Empty State ── */
-function EmptyState() {
+function EmptyState({ hasFilters, onNavigate }) {
+  if (hasFilters) {
+    return (
+      <div className={styles.empty}>
+        <Search size={36} style={{ color: 'var(--gray-300)' }} />
+        <p>No ads match your filters</p>
+      </div>
+    )
+  }
   return (
     <div className={styles.empty}>
-      <Images size={40} style={{ color: 'var(--gray-300)' }} />
-      <p>No ads match your filters</p>
+      <Wand2 size={36} style={{ color: 'var(--gray-300)' }} />
+      <p style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Your library is empty</p>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 260, textAlign: 'center', lineHeight: 1.5 }}>
+        Generate ads with AI Studio or upload your own creatives
+      </p>
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <button className="btn btn-primary btn-sm" onClick={() => onNavigate('/studio')}>
+          <Wand2 size={13} /> AI Studio
+        </button>
+        <button className="btn btn-outline btn-sm" onClick={() => onNavigate('/library#upload')}>
+          <Upload size={13} /> Upload
+        </button>
+      </div>
     </div>
   )
 }
