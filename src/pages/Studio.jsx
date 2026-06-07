@@ -173,7 +173,7 @@ export default function Studio() {
   const { ads, dna, dnaComplete, addAd } = useApp()
 
   const [format, setFormat]       = useState(FORMATS[0])
-  const [chatWidth, setChatWidth] = useState(360)
+  const [chatWidth, setChatWidth] = useState(null) // null = 50% (CSS default)
   const [hasContent, setHasContent] = useState(false)
   const [lastGenUrl, setLastGenUrl] = useState(null)
 
@@ -447,8 +447,8 @@ export default function Studio() {
       {/* ── Workspace ── */}
       <div className={styles.workspace}>
 
-        {/* Chat panel */}
-        <div className={styles.chatPanel} style={{ width: chatWidth }}>
+        {/* Chat panel — 50% default, draggable */}
+        <div className={styles.chatPanel} style={chatWidth ? { width: chatWidth } : {}}>
 
           {/* Reference image */}
           <div className={styles.refSection}>
